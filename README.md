@@ -75,12 +75,15 @@ the panel dot goes 🟢.
 
 ## Tools
 
-**premiere-pro** (15): `premiere_health`, `premiere_ping`, `get_project_info`,
+**premiere-pro** (18): `premiere_health`, `premiere_ping`, `get_project_info`,
 `list_sequences`, `get_sequence_clips`, `get_audio_clips` (incl. media file paths),
 `list_project_items`, `import_files`, `create_sequence`, `place_clip` (slice via
 in/out + place at exact time — the beat-edit primitive), `remove_clips`,
 `add_markers` (batched, colored), `list_available_transitions`,
-`apply_transition_to_all_cuts`, `apply_transition_to_clip`.
+`apply_transition_to_all_cuts`, `apply_transition_to_clip`, `insert_mogrt`
+(Essential Graphics .mogrt onto the timeline via `insertMogrtFromPath`),
+`get_mogrt_params` (enumerate a graphic's components/params with live values),
+`set_mogrt_param` (numbers/booleans verified; see limitations for text).
 
 **media-analysis** (5): `analysis_health`, `detect_beats` (beats + downbeats + BPM,
 any media format), `transcribe` (faster-whisper, word timestamps), `generate_srt`,
@@ -101,6 +104,11 @@ any media format), `transcribe` (faster-whisper, word timestamps), `generate_srt
 - **No caption-track creation** → `.srt` is generated, you drag it in (5 seconds)
 - **Existing transitions are count-only** → bulk-apply warns and asks before overwriting; selective skip activates automatically if Adobe fixes the API
 - **No clip speed changes, no razor** (razor is emulated via slice-and-place)
+- **MOGRT text is read/write-blocked** — `insert_mogrt` and numeric/boolean
+  `set_mogrt_param` work (verified live), but "Source Text" params return null
+  and reject every setter; confirmed Adobe-side gap (Feb 2026 dev-forum thread,
+  ExtendScript parity "planned"). Until then: insert the graphic via API, type
+  the text once in Essential Graphics — or use the PNG-title workaround.
 
 ## Troubleshooting (learned the hard way)
 

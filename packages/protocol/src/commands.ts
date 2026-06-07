@@ -17,6 +17,9 @@ export const COMMANDS = [
   "place_clip",
   "remove_clips",
   "create_sequence",
+  "insert_mogrt",
+  "get_mogrt_params",
+  "set_mogrt_param",
 ] as const;
 
 export type CommandName = (typeof COMMANDS)[number];
@@ -302,4 +305,73 @@ export interface CreateSequenceParams {
 export interface CreateSequenceResult {
   sequenceName: string;
   sequenceId: string;
+}
+
+// ---------------------------------------------------------------------------
+// MOGRT (Motion Graphics Template) support — prototype, API surface partially
+// verified (SequenceEditor exposes a MOGRT insert action per M2 discovery).
+// ---------------------------------------------------------------------------
+
+export interface InsertMogrtParams {
+  sequenceId?: string;
+  /** Absolute path to a .mogrt file on disk. */
+  mogrtPath: string;
+  /** Timeline position for the graphic's start. */
+  atSeconds: number;
+  videoTrackIndex: number;
+  /** Default: same as videoTrackIndex. */
+  audioTrackIndex?: number;
+}
+
+export interface InsertMogrtResult {
+  ok: boolean;
+  insertedAtSeconds: number;
+  videoTrackIndex: number;
+  mogrtName: string;
+  /** Which editor method name worked — informs future calls. */
+  methodUsed: string;
+}
+
+/** One adjustable parameter of a MOGRT clip's component. */
+export interface MogrtParamInfo {
+  componentIndex: number;
+  componentMatchName: string;
+  paramIndex: number;
+  displayName: string;
+  /** Current value if readable; otherwise a shape dump of the value object. */
+  value: unknown;
+  /** "string" | "number" | "boolean" | "color" | "unknown:<shape>" */
+  valueType: string;
+}
+
+export interface GetMogrtParamsParams {
+  sequenceId?: string;
+  videoTrackIndex: number;
+  /** 0-based clip index on that track (sorted by start time). */
+  clipIndex: number;
+}
+
+export interface GetMogrtParamsResult {
+  clipName: string;
+  params: MogrtParamInfo[];
+  /** Raw shape dumps for anything the prototype couldn't interpret. */
+  discoveryNotes: string[];
+}
+
+export interface SetMogrtParamParams {
+  sequenceId?: string;
+  videoTrackIndex: number;
+  clipIndex: number;
+  /** Component + param indexes as returned by get_mogrt_params. */
+  componentIndex: number;
+  paramIndex: number;
+  /** New value: string for text, number, boolean, or [r,g,b,a] 0-1 floats for color. */
+  value: string | number | boolean | number[];
+}
+
+export interface SetMogrtParamResult {
+  ok: boolean;
+  displayName: string;
+  /** Which setter strategy worked — informs future calls. */
+  methodUsed: string;
 }
