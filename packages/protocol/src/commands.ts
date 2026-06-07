@@ -21,6 +21,7 @@ export const COMMANDS = [
   "probe_effects",
   "list_effects",
   "add_clip_effect",
+  "grade_track",
 ] as const;
 
 export type CommandName = (typeof COMMANDS)[number];
@@ -395,4 +396,45 @@ export interface AddClipEffectResult {
   matchName: string;
   /** matchNames now on the clip, after adding. */
   components: string[];
+}
+
+// ---------------------------------------------------------------------------
+// grade_track — apply one effect + a set of numeric params to EVERY clip on a
+// video track, sequentially in the plugin (reliable; one call grades a reel).
+// Idempotent: ensures exactly one instance of the effect per clip (adds if
+// missing, removes duplicates), so re-running re-grades instead of stacking.
+// ---------------------------------------------------------------------------
+
+export interface GradeParam {
+  paramName: string;
+  value: number;
+}
+
+export interface GradeTrackParams {
+  sequenceId?: string;
+  videoTrackIndex: number;
+  /** Effect to ensure on each clip. Default "AE.ADBE Lumetri". */
+  matchName?: string;
+  /** Numeric params to set on that effect (Basic Correction for Lumetri). */
+  params: GradeParam[];
+}
+
+export interface GradeTrackClipResult {
+  clipIndex: number;
+  clipName: string;
+  status: "graded" | "error";
+  /** How the effect instance was obtained: "added" | "reused". */
+  effect?: string;
+  /** Duplicate effect instances removed to keep exactly one. */
+  duplicatesRemoved?: number;
+  paramsSet?: number;
+  message?: string;
+}
+
+export interface GradeTrackResult {
+  matchName: string;
+  clipCount: number;
+  graded: number;
+  errored: number;
+  results: GradeTrackClipResult[];
 }

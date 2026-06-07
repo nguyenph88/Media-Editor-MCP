@@ -21,6 +21,7 @@ import {
   type ProbeEffectsResult,
   type ListEffectsResult,
   type AddClipEffectResult,
+  type GradeTrackResult,
 } from "@ppmcp/protocol";
 import { WsHost, BridgeError } from "../bridge/WsHost.js";
 import { config } from "../config.js";
@@ -549,6 +550,36 @@ export function registerTools(server: McpServer, bridge: WsHost): void {
       const r = await bridge.sendCommand<AddClipEffectResult>("add_clip_effect", args);
       return textResult(
         `Added ${r.matchName} to "${r.clipName}". Components now: ${r.components.join(", ")}.`,
+        r,
+      );
+    }),
+  );
+
+  server.registerTool(
+    "grade_track",
+    {
+      title: "Color grade every clip on a track",
+      description:
+        "Apply one effect (default Lumetri Color) + a set of numeric params to EVERY clip on a " +
+        "video track, in one reliable sequential pass. Idempotent: ensures exactly one effect " +
+        "instance per clip (adds if missing, removes duplicates), so re-running re-grades rather " +
+        "than stacking. Use for consistent looks across a whole reel.",
+      inputSchema: {
+        sequenceId: z.string().optional().describe("Sequence id; defaults to the active sequence"),
+        videoTrackIndex: z.number().int().min(0).describe("V1 = 0"),
+        matchName: z
+          .string()
+          .default("AE.ADBE Lumetri")
+          .describe('Effect matchName (default "AE.ADBE Lumetri")'),
+        params: z
+          .array(z.object({ paramName: z.string(), value: z.number() }))
+          .describe('e.g. [{"paramName":"Temperature","value":20},{"paramName":"Saturation","value":85}]'),
+      },
+    },
+    wrap(async (args) => {
+      const r = await bridge.sendCommand<GradeTrackResult>("grade_track", args, config.bulkCommandTimeoutMs);
+      return textResult(
+        `Graded ${r.graded}/${r.clipCount} clips with ${r.matchName} (${r.errored} errors).`,
         r,
       );
     }),

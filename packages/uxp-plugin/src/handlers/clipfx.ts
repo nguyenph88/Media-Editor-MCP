@@ -17,6 +17,9 @@ import type {
   EffectInfo,
   AddClipEffectParams,
   AddClipEffectResult,
+  GradeTrackParams,
+  GradeTrackResult,
+  GradeTrackClipResult,
 } from "@ppmcp/protocol";
 import { BridgeError } from "../errors.js";
 import {
@@ -190,6 +193,130 @@ function safeGet<T>(fn: () => T): T | null {
   } catch {
     return null;
   }
+}
+
+// ---------------------------------------------------------------------------
+// grade_track — ensure one effect per clip + set params, sequentially
+// ---------------------------------------------------------------------------
+
+async function listChainComponents(chain: any): Promise<any[]> {
+  const count = await chain.getComponentCount();
+  const out: any[] = [];
+  for (let i = 0; i < count; i++) out.push(await chain.getComponentAtIndex(i));
+  return out;
+}
+
+export async function gradeTrack(params: GradeTrackParams): Promise<GradeTrackResult> {
+  const project = await getActiveProject();
+  const sequence = await resolveSequence(project, params.sequenceId);
+  const track = await getVideoTrack(sequence, params.videoTrackIndex);
+  const items = await getSortedClips(track);
+  const matchName = params.matchName ?? "AE.ADBE Lumetri";
+  const factory = (ppro as any).VideoFilterFactory;
+
+  const results: GradeTrackClipResult[] = [];
+  for (let idx = 0; idx < items.length; idx++) {
+    const item = items[idx];
+    const entry: GradeTrackClipResult = {
+      clipIndex: idx,
+      clipName: await clipName(item),
+      status: "graded",
+    };
+    try {
+      // 1. Find existing instances of the effect.
+      let chain = await item.getComponentChain();
+      let comps = await listChainComponents(chain);
+      const matchingNames = await Promise.all(
+        comps.map(async (c) =>
+          typeof c.getMatchName === "function" ? await c.getMatchName() : "",
+        ),
+      );
+      const matchIdxs = matchingNames
+        .map((mn, i) => (mn === matchName ? i : -1))
+        .filter((i) => i >= 0);
+
+      // 2. Remove duplicates (keep the first), so re-runs don't stack.
+      let removed = 0;
+      for (const dupI of matchIdxs.slice(1).reverse()) {
+        await withLockedAccess(project, () => {
+          project.executeTransaction((compound: any) => {
+            compound.addAction(chain.createRemoveComponentAction(comps[dupI]));
+          }, `MCP: dedupe ${matchName} on clip ${idx}`);
+        });
+        removed++;
+      }
+      entry.duplicatesRemoved = removed;
+
+      // 3. Add the effect if absent.
+      if (matchIdxs.length === 0) {
+        await withLockedAccess(project, () => {
+          const component =
+            factory.createComponent?.(matchName) ?? factory.createComponent(matchName, true);
+          if (!component) throw new Error(`createComponent("${matchName}") returned null`);
+          project.executeTransaction((compound: any) => {
+            compound.addAction(chain.createAppendComponentAction(component));
+          }, `MCP: add ${matchName} on clip ${idx}`);
+        });
+        entry.effect = "added";
+      } else {
+        entry.effect = "reused";
+      }
+
+      // 4. Re-read the chain and locate the (now single) effect component.
+      chain = await item.getComponentChain();
+      comps = await listChainComponents(chain);
+      let target: any;
+      for (const c of comps) {
+        const mn = typeof c.getMatchName === "function" ? await c.getMatchName() : "";
+        if (mn === matchName) {
+          target = c;
+          break;
+        }
+      }
+      if (!target) throw new Error(`effect ${matchName} missing after add`);
+
+      // 5. Set each param (first display-name match = Basic Correction for Lumetri).
+      const paramCount = await target.getParamCount();
+      const cache: Record<string, any> = {};
+      for (let p = 0; p < paramCount; p++) {
+        const param = await target.getParam(p);
+        // ComponentParam exposes displayName as a PROPERTY, not a method.
+        const name =
+          typeof param.getDisplayName === "function"
+            ? await param.getDisplayName()
+            : String(param.displayName ?? "");
+        if (name && !(name in cache)) cache[name] = param;
+      }
+      let setCount = 0;
+      for (const { paramName, value } of params.params) {
+        const param = cache[paramName];
+        if (!param) {
+          entry.message = `${entry.message ?? ""}[no param "${paramName}"]`;
+          continue;
+        }
+        await withLockedAccess(project, () => {
+          project.executeTransaction((compound: any) => {
+            const kf = param.createKeyframe(value);
+            compound.addAction(param.createSetValueAction(kf, true));
+          }, `MCP: ${matchName}/${paramName}=${value} clip ${idx}`);
+        });
+        setCount++;
+      }
+      entry.paramsSet = setCount;
+    } catch (e) {
+      entry.status = "error";
+      entry.message = `${entry.message ?? ""}${e instanceof Error ? e.message : e}`;
+    }
+    results.push(entry);
+  }
+
+  return {
+    matchName,
+    clipCount: items.length,
+    graded: results.filter((r) => r.status === "graded").length,
+    errored: results.filter((r) => r.status === "error").length,
+    results,
+  };
 }
 
 // ---------------------------------------------------------------------------
