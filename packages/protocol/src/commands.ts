@@ -22,6 +22,7 @@ export const COMMANDS = [
   "list_effects",
   "add_clip_effect",
   "grade_track",
+  "remove_track_effect",
 ] as const;
 
 export type CommandName = (typeof COMMANDS)[number];
@@ -437,4 +438,24 @@ export interface GradeTrackResult {
   graded: number;
   errored: number;
   results: GradeTrackClipResult[];
+}
+
+// ---------------------------------------------------------------------------
+// remove_track_effect — strip an effect (e.g. Lumetri) from every clip on a
+// track, back to ungraded. The "reset" before applying a fresh grade.
+// ---------------------------------------------------------------------------
+
+export interface RemoveTrackEffectParams {
+  sequenceId?: string;
+  videoTrackIndex: number;
+  /** Effect matchName to remove from each clip. Default "AE.ADBE Lumetri". */
+  matchName?: string;
+}
+
+export interface RemoveTrackEffectResult {
+  matchName: string;
+  clipCount: number;
+  /** Total effect instances removed across all clips. */
+  removed: number;
+  errored: number;
 }

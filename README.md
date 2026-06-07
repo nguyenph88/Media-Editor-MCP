@@ -92,7 +92,7 @@ Idempotent — running twice never duplicates.
 
 ## Tools
 
-**premiere-pro** (20): `premiere_health`, `premiere_ping`, `get_project_info`,
+**premiere-pro** (21): `premiere_health`, `premiere_ping`, `get_project_info`,
 `list_sequences`, `get_sequence_clips`, `get_audio_clips` (incl. media file paths),
 `list_project_items`, `import_files`, `create_sequence`, `place_clip` (slice via
 in/out + place at exact time — the beat-edit primitive), `remove_clips`,
@@ -104,6 +104,7 @@ or any Lumetri param), `list_effects` (installed video effects by matchName),
 `VideoFilterFactory.createComponent` + `chain.createAppendComponentAction`),
 `grade_track` (one reliable sequential pass: ensure one Lumetri per clip +
 set params on every clip — the engine behind /pp-color-grade),
+`remove_track_effect` (strip an effect from every clip — the grade reset),
 `probe_effects` (read-only API-surface discovery).
 
 **media-analysis** (7): `analysis_health`, `detect_beats` (beats + downbeats + BPM,

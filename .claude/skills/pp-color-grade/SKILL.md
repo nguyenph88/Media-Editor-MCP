@@ -37,6 +37,8 @@ Keep grades subtle by default — reels read better with a gentle consistent pus
 
 Lumetri exposes `Input LUT` / `LUTAsset` / `LookAsset` params. These take an asset/path, not a number, so `set_clip_param` (numeric only) can't set them yet — would need a path-valued setter. For now, grades use the numeric Basic Correction params.
 
-## Re-run
+## Re-run & reset
 
 Safe — `grade_track` removes duplicate effect instances and reuses the existing one, so re-running with new values just re-grades. No stacking.
+
+**Caveat:** `grade_track` only overwrites the params you pass; a param a previous look set that the new look omits will LINGER. So when fully switching looks (e.g. moody → vibrant), either pass the same param keys in both, OR **reset first**: call `remove_track_effect` (videoTrackIndex 0, matchName `AE.ADBE Lumetri`) to strip all grading back to ungraded, then `grade_track` the new look from clean. "Reset the grade" / "remove the color grade" → `remove_track_effect`.

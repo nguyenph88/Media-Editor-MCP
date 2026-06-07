@@ -22,6 +22,7 @@ import {
   type ListEffectsResult,
   type AddClipEffectResult,
   type GradeTrackResult,
+  type RemoveTrackEffectResult,
 } from "@ppmcp/protocol";
 import { WsHost, BridgeError } from "../bridge/WsHost.js";
 import { config } from "../config.js";
@@ -580,6 +581,31 @@ export function registerTools(server: McpServer, bridge: WsHost): void {
       const r = await bridge.sendCommand<GradeTrackResult>("grade_track", args, config.bulkCommandTimeoutMs);
       return textResult(
         `Graded ${r.graded}/${r.clipCount} clips with ${r.matchName} (${r.errored} errors).`,
+        r,
+      );
+    }),
+  );
+
+  server.registerTool(
+    "remove_track_effect",
+    {
+      title: "Remove an effect from every clip on a track",
+      description:
+        "Strip an effect (default Lumetri Color) from every clip on a video track — the grade " +
+        "reset. Use before applying a fresh look so old params don't linger. One sequential pass.",
+      inputSchema: {
+        sequenceId: z.string().optional().describe("Sequence id; defaults to the active sequence"),
+        videoTrackIndex: z.number().int().min(0).describe("V1 = 0"),
+        matchName: z
+          .string()
+          .default("AE.ADBE Lumetri")
+          .describe('Effect matchName to remove (default "AE.ADBE Lumetri")'),
+      },
+    },
+    wrap(async (args) => {
+      const r = await bridge.sendCommand<RemoveTrackEffectResult>("remove_track_effect", args, config.bulkCommandTimeoutMs);
+      return textResult(
+        `Removed ${r.removed} ${r.matchName} instance(s) across ${r.clipCount} clips (${r.errored} errors).`,
         r,
       );
     }),

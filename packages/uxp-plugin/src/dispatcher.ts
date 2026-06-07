@@ -28,6 +28,7 @@ import {
   listEffects,
   addClipEffect,
   gradeTrack,
+  removeTrackEffect,
 } from "./handlers/clipfx.js";
 
 type Handler = (params: never) => Promise<unknown>;
@@ -52,6 +53,7 @@ const handlers: Record<string, Handler> = {
   list_effects: listEffects,
   add_clip_effect: addClipEffect,
   grade_track: gradeTrack,
+  remove_track_effect: removeTrackEffect,
 };
 
 export async function dispatch(

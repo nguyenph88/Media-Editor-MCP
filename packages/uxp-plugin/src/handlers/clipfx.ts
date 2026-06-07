@@ -20,6 +20,8 @@ import type {
   GradeTrackParams,
   GradeTrackResult,
   GradeTrackClipResult,
+  RemoveTrackEffectParams,
+  RemoveTrackEffectResult,
 } from "@ppmcp/protocol";
 import { BridgeError } from "../errors.js";
 import {
@@ -317,6 +319,53 @@ export async function gradeTrack(params: GradeTrackParams): Promise<GradeTrackRe
     errored: results.filter((r) => r.status === "error").length,
     results,
   };
+}
+
+// ---------------------------------------------------------------------------
+// remove_track_effect — strip an effect from every clip (the grade reset)
+// ---------------------------------------------------------------------------
+
+export async function removeTrackEffect(
+  params: RemoveTrackEffectParams,
+): Promise<RemoveTrackEffectResult> {
+  const project = await getActiveProject();
+  const sequence = await resolveSequence(project, params.sequenceId);
+  const track = await getVideoTrack(sequence, params.videoTrackIndex);
+  const items = await getSortedClips(track);
+  const matchName = params.matchName ?? "AE.ADBE Lumetri";
+
+  let removed = 0;
+  let errored = 0;
+  for (let idx = 0; idx < items.length; idx++) {
+    try {
+      // Re-read + remove one matching component at a time (indices shift after
+      // each removal), until none remain.
+      for (;;) {
+        const chain = await items[idx].getComponentChain();
+        const comps = await listChainComponents(chain);
+        let hit = -1;
+        for (let i = 0; i < comps.length; i++) {
+          const mn =
+            typeof comps[i].getMatchName === "function" ? await comps[i].getMatchName() : "";
+          if (mn === matchName) {
+            hit = i;
+            break;
+          }
+        }
+        if (hit < 0) break;
+        await withLockedAccess(project, () => {
+          project.executeTransaction((compound: any) => {
+            compound.addAction(chain.createRemoveComponentAction(comps[hit]));
+          }, `MCP: remove ${matchName} on clip ${idx}`);
+        });
+        removed++;
+      }
+    } catch {
+      errored++;
+    }
+  }
+
+  return { matchName, clipCount: items.length, removed, errored };
 }
 
 // ---------------------------------------------------------------------------
