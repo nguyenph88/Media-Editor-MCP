@@ -206,7 +206,9 @@ function safeGet<T>(fn: () => T): T | null {
  * createComponent throws "Illegal Parameter type" on some builds, so try
  * several forms (same fallback add_clip_effect uses). Returns the component.
  */
-function createFilterComponent(factory: any, matchName: string): any {
+async function createFilterComponent(factory: any, matchName: string): Promise<any> {
+  // createComponent returns a Promise — must await, or an unresolved Promise
+  // gets passed to createAppendComponentAction ("Illegal Parameter type").
   const attempts: Array<() => any> = [
     () => factory.createComponent(matchName),
     () => factory.createComponent(matchName, true),
@@ -218,7 +220,7 @@ function createFilterComponent(factory: any, matchName: string): any {
   const errors: string[] = [];
   for (const attempt of attempts) {
     try {
-      const c = attempt();
+      const c = await attempt();
       if (c) return c;
     } catch (e) {
       errors.push(e instanceof Error ? e.message : String(e));
@@ -280,7 +282,7 @@ export async function gradeTrack(params: GradeTrackParams): Promise<GradeTrackRe
         // Create OUTSIDE the lock — createComponent rejects its args when
         // called inside lockedAccess (verified: add_clip_effect creates first,
         // locks only for the append).
-        const component = createFilterComponent(factory, matchName);
+        const component = await createFilterComponent(factory, matchName);
         await withLockedAccess(project, () => {
           project.executeTransaction((compound: any) => {
             compound.addAction(chain.createAppendComponentAction(component));
