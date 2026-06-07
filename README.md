@@ -1,151 +1,126 @@
 # Premiere-Pro-MCP
 
-Control Adobe Premiere Pro with Claude. Built for one editor's pain point —
-applying a Cross Dissolve at every cut of a 20-30 clip timeline in **one
-sentence** instead of 30 drags — and growing from there.
+Control Adobe Premiere Pro with Claude. Started as "apply a Cross Dissolve at
+every cut in one sentence" — now a full **beat-synced auto-edit toolchain**:
 
-> **You:** apply a 1 second cross dissolve to every cut on V1
+> **You:** here's a 60s music track and a folder of clips — build me a reel cut on the beat
 >
-> **Claude:** Applied "AE.ADBE Cross Dissolve New" (1s) on track V1:
-> 24/24 cuts applied, 0 skipped, 0 errored.
+> **Claude:** *detects 142.86 BPM → drops 34 bar markers → shuffles 12 clips into
+> 35 beat slots, each sliced from a different part of its source → exactly 60.000s,
+> zero gaps, every cut within half a frame of a downbeat → cross dissolves on all 34 cuts*
 
-## How it works
+## Architecture — two MCP servers
 
 ```
-Claude (MCP client) ⇄ stdio ⇄ MCP server [hosts ws://127.0.0.1:3001] ⇄ UXP plugin inside Premiere
+            ┌─ premiere-pro (Node) ── stdio ⇄ WS bridge :3001 ⇄ UXP plugin in Premiere
+Claude ─────┤
+            └─ media-analysis (Python) ── stdio; beat detection, whisper, SRT, text-PNGs
 ```
 
-Premiere can't be automated headlessly — a plugin must run inside it. UXP
-plugins can only be WebSocket *clients*, so the MCP server hosts the socket and
-the plugin (a small "MCP Bridge" panel) connects out to it.
+Claude orchestrates between them: analysis tools return data (beats, transcripts)
+into the conversation; Claude makes the creative decisions (which clip in which
+slot); editing primitives execute them in Premiere.
 
 | Package | What |
 |---|---|
-| `packages/protocol` | Shared wire types (command/result/error envelopes) |
-| `packages/server` | MCP stdio server + embedded WebSocket bridge |
-| `packages/uxp-plugin` | UXP panel loaded into Premiere (connection status + command executor) |
+| `packages/protocol` | Shared wire types for the bridge |
+| `packages/server` | Node MCP server + embedded WebSocket bridge |
+| `packages/uxp-plugin` | UXP panel inside Premiere (executes all timeline commands) |
+| `packages/analysis-server` | Python MCP server (beat_this, faster-whisper, Pillow) — models lazy-load once and stay resident |
 
 ## Requirements
 
-- Windows or macOS, Node.js ≥ 20
-- Adobe **Premiere Pro 25.6 or newer** (UXP support went GA in 25.6 — check Help ▸ About)
-- **Adobe UXP Developer Tools** (UDT) v2.2.1+ — install from the Creative Cloud app
-- An MCP client: Claude Code or Claude Desktop
+- Windows (verified) or macOS, Node.js ≥ 20, [uv](https://docs.astral.sh/uv/)
+- Adobe **Premiere Pro 25.6+** (verified on 26.2.2)
+- **Adobe UXP Developer Tools** (UDT) from the Creative Cloud app
+- Claude Code or Claude Desktop
 
 ## Install (one time)
 
-### 1. Build
-
 ```powershell
-git clone <this repo>
+git clone https://github.com/nguyenph88/Premiere-Pro-MCP.git
 cd Premiere-Pro-MCP
-npm install
-npm run build
+npm install && npm run build
+cd packages\analysis-server && uv sync && cd ..\..
 ```
 
-### 2. Enable developer mode in Premiere
+**Enable developer mode in Premiere:** Edit ▸ Preferences ▸ Plug-ins ▸ check
+"Enable developer mode", restart Premiere. (Without it UDT can't see Premiere.)
 
-**Edit ▸ Preferences ▸ Plug-ins ▸ check "Enable developer mode"**, then
-**restart Premiere**. Without this, UDT cannot see Premiere at all
-("No applications are connected to the service").
+**Load the plugin:** UDT ▸ Add Plugin ▸ `packages/uxp-plugin/manifest.json` ▸
+Load & Watch. The "MCP Bridge" panel appears in Premiere.
 
-### 3. Load the plugin into Premiere
-
-1. Open **UXP Developer Tools** (Premiere must be running).
-2. **Add Plugin** → select `packages/uxp-plugin/manifest.json`.
-3. Click **Load & Watch** (Watch auto-reloads the panel when you rebuild).
-4. The **MCP Bridge** panel appears in Premiere (Window menu if hidden).
-
-### 4. Register the MCP server
-
-**Claude Code:**
+**Register both servers (Claude Code):**
 
 ```powershell
-claude mcp add premiere-pro -- node "<absolute-path-to-repo>\packages\server\dist\index.js"
+claude mcp add premiere-pro -- node "<repo>\packages\server\dist\index.js"
+claude mcp add media-analysis -- uv run --directory "<repo>\packages\analysis-server" ppmcp-analysis
 ```
 
-**Claude Desktop** — add to `claude_desktop_config.json` (Settings ▸ Developer):
-
-```json
-{
-  "mcpServers": {
-    "premiere-pro": {
-      "command": "node",
-      "args": ["<absolute-path-to-repo>/packages/server/dist/index.js"]
-    }
-  }
-}
-```
+(Run `claude mcp add` from the folder you'll start Claude sessions in — registration is per-project-directory.)
 
 ## Daily use
 
-1. Launch Premiere, open your project.
-2. In UDT, **Load** the plugin (needed once per Premiere launch).
-3. Start a Claude session — the panel's dot turns 🟢 within a few seconds.
-4. Talk to Claude.
+Launch Premiere → load plugin in UDT (once per Premiere launch) → start Claude →
+the panel dot goes 🟢.
 
 ### Things to say
 
-- *"check premiere health"* — verify the connection
-- *"show me the clips on V1"*
-- *"apply a 1 second cross dissolve to every cut on V1"*
-- *"apply a half-second dissolve to every cut on V2, skip cuts without handles"*
-- *"what dissolve transitions do I have installed?"*
-- *"put a film dissolve at the end of clip 3 on V1"*
+- *"apply a 1 second cross dissolve to every cut on V1"* — the original classic; warns before overwriting existing transitions
+- *"detect the beats of the music on A1 and mark them on the timeline"*
+- *"build a 60s beat-synced edit from the clips in `D:\footage` using `song.mp3`"* — the full pipeline
+- *"add a title that says MUI NE 2026 over the first 3 seconds"* — rendered as transparent PNG, imported, placed on V2
+- *"transcribe the voiceover and make subtitles"* — produces an `.srt`; **drag it into Premiere** for native captions (the one manual step — Premiere's plugin API can't create caption tracks)
+- *"show me the clips on V1"*, *"what's in my project bin?"*
 
 ## Tools
 
-| Tool | Purpose |
-|---|---|
-| `premiere_health` | Is the plugin connected? Start here when debugging |
-| `premiere_ping` | Round-trip latency test |
-| `get_project_info` | Open project name/path/sequence count |
-| `list_sequences` | Sequences with track counts + frame rate |
-| `get_sequence_clips` | Clips on video track(s) with timecodes |
-| `list_available_transitions` | Installed transition matchNames (filter e.g. `dissolve`) |
-| `apply_transition_to_all_cuts` | **The main one** — transition at every cut on a track, per-cut report |
-| `apply_transition_to_clip` | Transition on one clip's start/end edge |
+**premiere-pro** (15): `premiere_health`, `premiere_ping`, `get_project_info`,
+`list_sequences`, `get_sequence_clips`, `get_audio_clips` (incl. media file paths),
+`list_project_items`, `import_files`, `create_sequence`, `place_clip` (slice via
+in/out + place at exact time — the beat-edit primitive), `remove_clips`,
+`add_markers` (batched, colored), `list_available_transitions`,
+`apply_transition_to_all_cuts`, `apply_transition_to_clip`.
+
+**media-analysis** (5): `analysis_health`, `detect_beats` (beats + downbeats + BPM,
+any media format), `transcribe` (faster-whisper, word timestamps), `generate_srt`,
+`render_text_png` (text overlays).
+
+## The beat-edit recipe (what Claude does internally)
+
+1. `detect_beats` on the music → downbeat list
+2. Probe clip durations (`packages/analysis-server/tests/probe_durations.py`)
+3. `create_sequence` from a clip (settings match media), clear the seed clip
+4. Place music: `place_clip` the audio file, then `remove_clips` its video item — the linked audio stays on A1
+5. Per downbeat slot: `place_clip` with a varying source slice, **overshooting ~3 frames** — the next overwrite trims it frame-tight (this defeats mp4 start-offset quirks)
+6. `add_markers` at downbeats, `apply_transition_to_all_cuts` to finish
+
+## Known limitations (Premiere 26.x UXP API)
+
+- **No native text/titles** → text is rendered to transparent PNGs (Pillow) and placed as overlays; re-render to change wording
+- **No caption-track creation** → `.srt` is generated, you drag it in (5 seconds)
+- **Existing transitions are count-only** → bulk-apply warns and asks before overwriting; selective skip activates automatically if Adobe fixes the API
+- **No clip speed changes, no razor** (razor is emulated via slice-and-place)
 
 ## Troubleshooting (learned the hard way)
 
-- **UDT says "No applications are connected to the service":** enable
-  **Edit ▸ Preferences ▸ Plug-ins ▸ "Enable developer mode"** in Premiere itself,
-  then restart Premiere. UDT only sees apps that opt in.
-- **Panel log says `Permission denied to the url ws://... Manifest entry not found`:**
-  UXP's per-domain permission matcher rejects localhost+port entries. The manifest
-  must use `"network": { "domains": "all" }` (already set).
-- **Manifest changes don't take effect on "Reload":** UDT caches the manifest.
-  Do **Unload → Load & Watch** to re-parse it. You know it worked when the panel
-  log starts fresh with "MCP Bridge panel loaded".
-- **Premiere API shape mismatch** (`PREMIERE_API_ERROR` mentioning own:{...} proto:{...}):
-  the error message contains a reflection dump of the real object — fix the accessor
-  in `packages/uxp-plugin/src/handlers/ppro.ts`, `npm run build:plugin`, UDT auto-reloads.
-- **Tools return "plugin not connected":** the MCP Bridge panel must be open in
-  Premiere and its dot green. Re-load via UDT after every Premiere restart.
-
-## Notes & gotchas
-
-- **Handles:** a centered two-sided dissolve of duration D needs ≥ D/2 of unused
-  source media beyond the cut on *both* clips. Cuts without enough handle media
-  are skipped and reported (`skipped_insufficient_handles`) — same behavior as
-  dragging the transition manually. Stills (PNGs etc.) always have enough.
-- **Re-running is safe:** applying a transition where one exists replaces it.
-- **One session owns the bridge:** if two Claude sessions run this server, the
-  second can't bind port 3001 and its Premiere tools return a clear error.
-  Override the port with `PPMCP_WS_PORT` (must match `WS_URL` in
-  `packages/uxp-plugin/src/wsClient.ts`).
-- **Smoke test without Premiere:** `node scripts/smoke.mjs` runs the full
-  MCP ⇄ bridge ⇄ (fake) plugin round-trip.
+- **UDT "No applications are connected":** enable developer mode in Premiere (above), restart Premiere.
+- **Panel log `Permission denied to the url ws://...`:** manifest must use `"network": { "domains": "all" }` (already set); UXP rejects per-URL localhost entries.
+- **Manifest changes ignored on Reload:** Unload → Load & Watch (UDT caches manifests).
+- **`PREMIERE_API_ERROR` with `own:{...} proto:{...}` dumps:** that's the built-in API-discovery reflection — the error shows the real object shape; fix the accessor in `packages/uxp-plugin/src/handlers/`, rebuild, UDT hot-reloads.
+- **Tools say plugin not connected:** the MCP Bridge panel must be open with a green dot; reload via UDT after every Premiere restart.
+- **First `detect_beats`/`transcribe` call is slow:** model download + load (one-time per process); subsequent calls are fast.
 
 ## Dev
 
 ```powershell
-npm run build            # everything
-npm run watch:plugin     # esbuild watch for the UXP panel (pair with UDT "Watch")
-npm run dev:server       # run MCP server from TS source
+npm run build            # protocol + server + plugin
+npm run watch:plugin     # pair with UDT Watch for hot reload
+node scripts/smoke.mjs   # protocol round-trip without Premiere (isolated port 3199)
+cd packages\analysis-server; uv run python tests/smoke.py   # synthesized 120BPM click-track test
 ```
 
-Adding a new automation: define the command in `packages/protocol/src/commands.ts`,
-implement a handler in `packages/uxp-plugin/src/handlers/`, register it in
-`dispatcher.ts`, expose an MCP tool in `packages/server/src/mcp/registerTools.ts`.
-~30 lines per tool.
+Adding a Premiere tool: command in `packages/protocol/src/commands.ts` → handler in
+`packages/uxp-plugin/src/handlers/` → register in `dispatcher.ts` → tool in
+`packages/server/src/mcp/registerTools.ts`. Adding an analysis tool: one decorated
+function in `packages/analysis-server/src/ppmcp_analysis/server.py`.
