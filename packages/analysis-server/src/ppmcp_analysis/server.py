@@ -92,6 +92,22 @@ def find_best_moments(
 
 
 @mcp.tool()
+def classify_song(file_path: str) -> dict[str, Any]:
+    """Classify a song's 'drive' (energetic ↔ cinematic) to set the cutting pace.
+
+    Uses tempo (BPM), onset density and percussive fraction — no genre ML.
+    Returns bpm, onsetDensity, percussiveFraction, a 0..1 `drive`, a `mood`
+    (energetic | balanced | cinematic) and `recommendedSpanCenter` = the average
+    beats-per-clip the edit should aim for (energetic ~1.3 = fast cuts,
+    cinematic ~2.5 = clips linger). Per-clip find_best_moments activity then
+    distributes individual spans around that center.
+    """
+    from .song import classify_song as _classify
+
+    return _classify(file_path)
+
+
+@mcp.tool()
 def detect_energy(file_path: str, slot_boundaries: list[float]) -> dict[str, Any]:
     """Measure the music's energy level (0..1) for each timeline slot.
 

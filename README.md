@@ -108,13 +108,16 @@ set params on every clip — the engine behind /pp-color-grade),
 `remove_track_effect` (strip an effect from every clip — the grade reset),
 `probe_effects` (read-only API-surface discovery).
 
-**media-analysis** (7): `analysis_health`, `detect_beats` (beats + downbeats + BPM,
+**media-analysis** (8): `analysis_health`, `detect_beats` (beats + downbeats + BPM,
 any media format), `find_best_moments` (ranked most-interesting windows per clip —
 motion 35% / sharpness 25% / faces 25% / exposure 15%; faces via YuNet on
-aspect-preserved frames, model lazy-downloads like the others; ~2s per clip),
+aspect-preserved frames, model lazy-downloads like the others; also returns absolute
+`activityMotion`/`activitySharpness` for cross-clip ranking; ~2s per clip),
 `detect_energy` (per-slot music energy 0..1 + calm/build/drop label — RMS 60% +
-onset 40%; maps kinetic footage onto drops), `transcribe` (faster-whisper, word
-timestamps), `generate_srt`, `render_text_png` (text overlays).
+onset 40%; maps kinetic footage onto drops), `classify_song` (energetic↔cinematic
+`drive` from tempo + onset density + percussive fraction → recommended cutting
+pace), `transcribe` (faster-whisper, word timestamps), `generate_srt`,
+`render_text_png` (text overlays).
 
 ## The beat-edit recipe (what /pp-create-reel does internally)
 

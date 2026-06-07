@@ -1,6 +1,6 @@
 ---
 name: pp-create-reel-once
-description: Build a beat-synced reel where each clip appears EXACTLY ONCE (no repeats) and the reel length is whatever the clips naturally fill — not forced to 59s. Usage - /pp-create-reel-once <music file> <footage folder> [chronological] [beatsPerClip=auto|1|2|3]. For when you have few clips (5-8) or want a clip's full moment. Supports chronological order and spanning a clip across 2-3 beats.
+description: Build a beat-synced reel where each clip appears EXACTLY ONCE (no repeats) and the reel length is whatever the clips naturally fill — not forced to 59s. Usage - /pp-create-reel-once <music file> <footage folder> [chronological] [beatsPerClip=auto|1|2|3]. For when you have few clips (5-8) or want a clip's full moment. Supports chronological order and spanning a clip across 2-3 beats. Auto-span is song-aware: classify_song sets the cutting pace (energetic=fast cuts, cinematic=clips linger), per-clip activity distributes within it.
 ---
 
 # Create reel (each clip once) — natural-length beat edit
@@ -28,10 +28,12 @@ Same as [[pp-create-reel]] Step 2: `premiere_health` + `analysis_health` green; 
 Per clip, decide `span ∈ {1,2,3}` = how many consecutive downbeat-intervals it occupies:
 - **fixed** (`beatsPerClip=1|2|3`): every clip gets that span.
 - **manual** (`beatsPerClip=[3,1,2,…]`): one span per clip, in order.
-- **auto** (default): span by how DYNAMIC the footage actually is — not raw length (a long static shot should NOT hog 3 beats). `find_best_moments` returns absolute, cross-clip-comparable `activityMotion` and `activitySharpness` (whole-clip means, before per-clip normalization). Across the clips in THIS reel:
-  1. Min-max normalize `activityMotion` and `activitySharpness` over the clip set; `activity = 0.7·motionN + 0.3·sharpN`.
-  2. Tier the span: `activity ≥ 0.66 → 3`, `≥ 0.33 → 2`, else `1`. (With few clips, ranking into thirds works too.)
-  3. **Cap by what the clip can fill**: shrink span while `clipDuration < span×bar + 0.3`. A short clip can't span 3 even if lively; a long boring clip stays at 1.
+- **auto** (default): a **two-layer** model — the SONG sets the cutting pace, then per-clip ACTIVITY distributes spans around it. This makes energetic tracks cut fast and cinematic tracks linger, while still giving the most dynamic clips the longer holds.
+  1. **Song layer** — `classify_song(music)` → `recommendedSpanCenter` (energetic ≈ 1.3, balanced ≈ 1.8, cinematic ≈ 2.5) from tempo + onset density + percussive fraction. This is the average beats-per-clip.
+  2. **Clip layer** — `find_best_moments` returns absolute, cross-clip-comparable `activityMotion` / `activitySharpness` (whole-clip means, before per-clip normalization). Min-max them across the clip set; `activity = 0.7·motionN + 0.3·sharpN`, giving each clip an `activityRank ∈ [0,1]`.
+  3. **Combine**: `span = round(spanCenter + (activityRank − 0.5) × 1.5)`, clamped to `[1,3]`. (So on a cinematic song every clip leans 2-3 but the liveliest still top out at 3; on an energetic song most clips are 1 and only the most dynamic reach 2.)
+  4. **Cap by what the clip can fill**: shrink span while `clipDuration < span×bar + 0.3`. A short clip can't span 3 even if lively; a long static clip stays low.
+  - This replaces the old raw-duration rule (which wrongly gave long STATIC clips 3 beats). `beatsPerClip` (fixed/manual) still overrides everything.
 - A clip's slot duration = `D[k+span] − D[k]` (sum of its bars). Get its slice from `find_best_moments(clip, window_seconds = slotDur + 0.1, count=1)` → top window `start`. (In chronological mode this still picks the BEST window *within* the clip — order refers to clip sequence, not within-clip.)
 
 ## Step 4 — Build
