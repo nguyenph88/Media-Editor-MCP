@@ -13,6 +13,15 @@ import {
   applyTransitionToAllCuts,
   applyTransitionToClip,
 } from "./handlers/transitions.js";
+import { addMarkers } from "./handlers/markers.js";
+import {
+  getAudioClips,
+  listProjectItems,
+  importFiles,
+  placeClip,
+  removeClips,
+  createSequence,
+} from "./handlers/edit.js";
 
 type Handler = (params: never) => Promise<unknown>;
 
@@ -24,6 +33,13 @@ const handlers: Record<string, Handler> = {
   list_available_transitions: listAvailableTransitions,
   apply_transition_to_all_cuts: applyTransitionToAllCuts,
   apply_transition_to_clip: applyTransitionToClip,
+  add_markers: addMarkers,
+  get_audio_clips: getAudioClips,
+  list_project_items: listProjectItems,
+  import_files: importFiles,
+  place_clip: placeClip,
+  remove_clips: removeClips,
+  create_sequence: createSequence,
 };
 
 export async function dispatch(

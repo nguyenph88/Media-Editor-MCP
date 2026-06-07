@@ -167,6 +167,75 @@ export function secondsToTimecode(seconds: number, fps: number): string {
   return `${pad(h)}:${pad(m)}:${pad(s)}:${pad(f)}`;
 }
 
+/** SequenceEditor holds all timeline-mutation actions (insert/overwrite/clone/remove/MOGRT). */
+export function getSequenceEditor(sequence: any): any {
+  const editor = ppro.SequenceEditor?.getEditor?.(sequence);
+  if (!editor) {
+    throw new BridgeError(
+      "PREMIERE_API_ERROR",
+      `SequenceEditor unavailable. ppro.SequenceEditor: ${describeShape(ppro.SequenceEditor)}`,
+    );
+  }
+  return editor;
+}
+
+/** Recursively walk the project bins. Calls visit(item, binPath) for every item. */
+export async function walkProjectItems(
+  project: any,
+  visit: (item: any, binPath: string) => void | Promise<void>,
+): Promise<void> {
+  const root = await project.getRootItem();
+  async function walk(folderItem: any, binPath: string): Promise<void> {
+    const items: any[] = (await folderItem.getItems?.()) ?? [];
+    for (const item of items) {
+      await visit(item, binPath);
+      const asFolder = safeCast(() => ppro.FolderItem.cast(item));
+      if (asFolder && typeof asFolder.getItems === "function") {
+        await walk(asFolder, `${binPath}/${String(item.name ?? "")}`);
+      }
+    }
+  }
+  await walk(root, "");
+}
+
+export async function findProjectItemByName(project: any, name: string): Promise<any> {
+  let found: any = null;
+  await walkProjectItems(project, (item) => {
+    if (!found && String(item.name ?? "") === name) found = item;
+  });
+  if (!found) {
+    throw new BridgeError(
+      "BAD_PARAMS",
+      `No project item named "${name}" in the bin. Use list_project_items to see what exists.`,
+    );
+  }
+  return found;
+}
+
+/** Cast a ProjectItem to ClipProjectItem (footage). Null when it isn't one (e.g. a bin). */
+export function asClipProjectItem(item: any): any {
+  return safeCast(() => ppro.ClipProjectItem.cast(item));
+}
+
+export async function mediaPathOf(projectItem: any): Promise<string | null> {
+  try {
+    const clipItem = asClipProjectItem(projectItem);
+    if (!clipItem || typeof clipItem.getMediaFilePath !== "function") return null;
+    const p = await clipItem.getMediaFilePath();
+    return p ? String(p) : null;
+  } catch {
+    return null;
+  }
+}
+
+function safeCast<T>(fn: () => T): T | null {
+  try {
+    return fn() ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Run `fn` while holding the project's write lock, if the API requires it.
  * Some builds require lockedAccess around timeline mutations; harmless if not.

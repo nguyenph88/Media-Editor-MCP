@@ -129,7 +129,12 @@ try {
 
   const tools = await rpc("tools/list", {});
   const names = tools.tools.map((t) => t.name).sort();
-  check("tools/list", names.length === 8, names.join(", "));
+  const expected = ["premiere_health", "premiere_ping", "apply_transition_to_all_cuts", "place_clip", "add_markers"];
+  check(
+    `tools/list (${names.length} tools)`,
+    expected.every((n) => names.includes(n)),
+    names.join(", "),
+  );
 
   // health BEFORE plugin connects
   let health = await rpc("tools/call", { name: "premiere_health", arguments: {} });

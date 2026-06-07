@@ -3,13 +3,20 @@ import { z } from "zod";
 import {
   DEFAULT_TRANSITION_MATCH_NAME,
   DEFAULT_TRANSITION_DURATION_SECONDS,
+  type AddMarkersResult,
   type ApplyTransitionToAllCutsResult,
   type ApplyTransitionToClipResult,
+  type CreateSequenceResult,
+  type GetAudioClipsResult,
   type GetSequenceClipsResult,
+  type ImportFilesResult,
   type ListAvailableTransitionsResult,
+  type ListProjectItemsResult,
   type ListSequencesResult,
   type PingResult,
+  type PlaceClipResult,
   type ProjectInfoResult,
+  type RemoveClipsResult,
 } from "@ppmcp/protocol";
 import { WsHost, BridgeError } from "../bridge/WsHost.js";
 import { config } from "../config.js";
@@ -278,6 +285,162 @@ export function registerTools(server: McpServer, bridge: WsHost): void {
           : `Not applied (${r.status})${r.message ? `: ${r.message}` : ""}`,
         r,
       );
+    }),
+  );
+
+  // -------------------------------------------------------------------------
+  // Editing primitives (Phase 2)
+  // -------------------------------------------------------------------------
+  server.registerTool(
+    "add_markers",
+    {
+      title: "Add sequence markers",
+      description:
+        "Add markers to the active sequence's timeline ruler (e.g. at beat times from " +
+        "media-analysis detect_beats). Batched: pass all markers in one call.",
+      inputSchema: {
+        sequenceId: z.string().optional(),
+        markers: z
+          .array(
+            z.object({
+              seconds: z.number().min(0),
+              name: z.string().optional(),
+              comments: z.string().optional(),
+              colorIndex: z.number().int().min(0).max(7).optional()
+                .describe("0 green, 1 red, 2 magenta, 3 orange, 4 yellow, 5 white, 6 blue, 7 cyan"),
+              durationSeconds: z.number().positive().optional(),
+            }),
+          )
+          .min(1)
+          .max(500),
+        clearExisting: z.boolean().default(false).describe("Remove all existing markers first"),
+      },
+    },
+    wrap(async (args) => {
+      const r = await bridge.sendCommand<AddMarkersResult>("add_markers", args, config.bulkCommandTimeoutMs);
+      return textResult(`Added ${r.added} marker(s)${r.removed ? `, removed ${r.removed} old` : ""}.`, r);
+    }),
+  );
+
+  server.registerTool(
+    "get_audio_clips",
+    {
+      title: "Get audio clips",
+      description:
+        "List clips on audio track(s) with timecodes AND source media file paths — " +
+        "use the path to feed media-analysis tools (detect_beats, transcribe).",
+      inputSchema: {
+        sequenceId: z.string().optional(),
+        audioTrackIndex: z.number().int().min(0).optional().describe("A1 = 0; omit for all"),
+      },
+    },
+    wrap(async (args) => {
+      const r = await bridge.sendCommand<GetAudioClipsResult>("get_audio_clips", args);
+      const lines: string[] = [`Sequence "${r.sequenceName}"`];
+      for (const t of r.tracks) {
+        lines.push(`Track ${t.trackName} (${t.clips.length} clips):`);
+        for (const c of t.clips) {
+          lines.push(`  [${c.index}] ${c.name}  ${c.startTimecode} → ${c.endTimecode}  ${c.mediaPath ?? "(no path)"}`);
+        }
+      }
+      return textResult(lines.join("\n"), r);
+    }),
+  );
+
+  server.registerTool(
+    "list_project_items",
+    {
+      title: "List project bin items",
+      description: "List all items in the project bins with type and media file path.",
+      inputSchema: {},
+    },
+    wrap(async () => {
+      const r = await bridge.sendCommand<ListProjectItemsResult>("list_project_items", {});
+      const lines = r.items.map(
+        (i) => `${i.type === "folder" ? "📁" : "🎞"} ${i.binPath === "/" ? "" : i.binPath + "/"}${i.name}${i.mediaPath ? `  (${i.mediaPath})` : ""}`,
+      );
+      return textResult(lines.join("\n") || "Project is empty.", r);
+    }),
+  );
+
+  server.registerTool(
+    "import_files",
+    {
+      title: "Import files into the project",
+      description: "Import media files (video, audio, images, PNG overlays) into the project root bin.",
+      inputSchema: {
+        paths: z.array(z.string()).min(1).max(100).describe("Absolute file paths"),
+      },
+    },
+    wrap(async (args) => {
+      const r = await bridge.sendCommand<ImportFilesResult>("import_files", args, config.bulkCommandTimeoutMs);
+      return textResult(`Imported: ${r.imported.join(", ")}`, r);
+    }),
+  );
+
+  server.registerTool(
+    "place_clip",
+    {
+      title: "Place a clip on the timeline",
+      description:
+        "Place a project item (by bin name) at an exact time on a track, optionally sliced " +
+        "via source in/out points. The core primitive for beat-synced editing: place a slice " +
+        "per beat slot. mode 'overwrite' (default) replaces what's there; 'insert' ripples. " +
+        "A track index beyond the current count auto-creates the track (use for overlays).",
+      inputSchema: {
+        sequenceId: z.string().optional(),
+        projectItemName: z.string().describe("Bin item name — see list_project_items"),
+        atSeconds: z.number().min(0).describe("Timeline position for clip start"),
+        videoTrackIndex: z.number().int().min(0).describe("V1 = 0; higher = overlay tracks"),
+        audioTrackIndex: z.number().int().min(0).optional().describe("Defaults to videoTrackIndex"),
+        inSeconds: z.number().min(0).optional().describe("Slice start within source media"),
+        outSeconds: z.number().min(0).optional().describe("Slice end within source media"),
+        mode: z.enum(["overwrite", "insert"]).default("overwrite"),
+      },
+    },
+    wrap(async (args) => {
+      const r = await bridge.sendCommand<PlaceClipResult>("place_clip", args);
+      return textResult(
+        `Placed "${r.clipName}" at ${r.placedAtSeconds.toFixed(2)}s on V${r.videoTrackIndex + 1}.`,
+        r,
+      );
+    }),
+  );
+
+  server.registerTool(
+    "remove_clips",
+    {
+      title: "Remove clips from a track",
+      description: "Remove clips by index from a video track. ripple=true closes the gaps.",
+      inputSchema: {
+        sequenceId: z.string().optional(),
+        videoTrackIndex: z.number().int().min(0),
+        clipIndexes: z.array(z.number().int().min(0)).min(1),
+        ripple: z.boolean().default(false),
+      },
+    },
+    wrap(async (args) => {
+      const r = await bridge.sendCommand<RemoveClipsResult>("remove_clips", args);
+      return textResult(`Removed ${r.removed} clip(s).`, r);
+    }),
+  );
+
+  server.registerTool(
+    "create_sequence",
+    {
+      title: "Create a sequence",
+      description:
+        "Create a new sequence whose settings match the given media item(s); the items are " +
+        "placed in it. Becomes the active sequence by default.",
+      inputSchema: {
+        name: z.string(),
+        fromProjectItemNames: z.array(z.string()).min(1).describe("Bin item names"),
+        activate: z.boolean().default(true),
+      },
+    },
+    wrap(async (args) => {
+      const r = await bridge.sendCommand<CreateSequenceResult>("create_sequence", args, config.bulkCommandTimeoutMs);
+      return textResult(`Created sequence "${r.sequenceName}" (id: ${r.sequenceId}).`, r);
     }),
   );
 

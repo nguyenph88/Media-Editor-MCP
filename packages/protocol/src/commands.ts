@@ -10,6 +10,13 @@ export const COMMANDS = [
   "list_available_transitions",
   "apply_transition_to_all_cuts",
   "apply_transition_to_clip",
+  "add_markers",
+  "get_audio_clips",
+  "list_project_items",
+  "import_files",
+  "place_clip",
+  "remove_clips",
+  "create_sequence",
 ] as const;
 
 export type CommandName = (typeof COMMANDS)[number];
@@ -183,4 +190,116 @@ export interface ApplyTransitionToClipResult {
   status: CutStatus;
   clipName: string;
   message?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Editing primitives (Phase 2)
+// ---------------------------------------------------------------------------
+
+export interface MarkerSpec {
+  seconds: number;
+  name?: string;
+  comments?: string;
+  /** Premiere marker color index (0-7: green, red, magenta, orange, yellow, white, blue, cyan). */
+  colorIndex?: number;
+  durationSeconds?: number;
+}
+
+export interface AddMarkersParams {
+  sequenceId?: string;
+  markers: MarkerSpec[];
+  /** Remove all existing sequence markers first. Default false. */
+  clearExisting?: boolean;
+}
+
+export interface AddMarkersResult {
+  added: number;
+  removed: number;
+}
+
+export interface GetAudioClipsParams {
+  sequenceId?: string;
+  /** 0-based audio track index (A1 = 0). Omit for all audio tracks. */
+  audioTrackIndex?: number;
+}
+
+export interface AudioClipInfo extends ClipInfo {
+  /** Absolute path of the source media file (for external analysis). */
+  mediaPath: string | null;
+}
+
+export interface GetAudioClipsResult {
+  sequenceName: string;
+  tracks: Array<{ trackIndex: number; trackName: string; clips: AudioClipInfo[] }>;
+}
+
+export interface ProjectItemInfo {
+  name: string;
+  /** "clip" | "folder" | "other" */
+  type: string;
+  mediaPath: string | null;
+  binPath: string;
+}
+
+export interface ListProjectItemsResult {
+  items: ProjectItemInfo[];
+}
+
+export interface ImportFilesParams {
+  /** Absolute file paths to import into the project root bin. */
+  paths: string[];
+}
+
+export interface ImportFilesResult {
+  ok: boolean;
+  imported: string[];
+}
+
+export interface PlaceClipParams {
+  sequenceId?: string;
+  /** Project item name as shown in the bin (see list_project_items). */
+  projectItemName: string;
+  /** Timeline position for the clip start. */
+  atSeconds: number;
+  videoTrackIndex: number;
+  /** Default: same as videoTrackIndex. */
+  audioTrackIndex?: number;
+  /** Source in/out (seconds within the media) to slice before placing. */
+  inSeconds?: number;
+  outSeconds?: number;
+  /** "overwrite" replaces whatever occupies the range (default); "insert" ripples. */
+  mode?: "overwrite" | "insert";
+}
+
+export interface PlaceClipResult {
+  ok: boolean;
+  placedAtSeconds: number;
+  videoTrackIndex: number;
+  clipName: string;
+}
+
+export interface RemoveClipsParams {
+  sequenceId?: string;
+  videoTrackIndex: number;
+  /** 0-based clip indexes on that track (sorted by start time). */
+  clipIndexes: number[];
+  /** Close the gaps (ripple delete). Default false. */
+  ripple?: boolean;
+}
+
+export interface RemoveClipsResult {
+  removed: number;
+}
+
+export interface CreateSequenceParams {
+  name: string;
+  /** Bin item names; sequence settings derive from the first item's media. */
+  fromProjectItemNames: string[];
+  /** Make it the active sequence. Default true. */
+  activate?: boolean;
+}
+
+export interface CreateSequenceResult {
+  sequenceName: string;
+  sequenceId: string;
 }
