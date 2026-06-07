@@ -152,11 +152,19 @@ export async function placeClip(params: PlaceClipParams): Promise<PlaceClipResul
     }
     const inT = secondsToFrameSnappedTickTime(params.inSeconds, timebase);
     const outT = secondsToFrameSnappedTickTime(params.outSeconds, timebase);
-    await withLockedAccess(project, () => {
-      project.executeTransaction((compound: any) => {
-        compound.addAction(clipItem.createSetInOutPointsAction(inT, outT));
-      }, "MCP: slice source");
-    });
+    try {
+      await withLockedAccess(project, () => {
+        project.executeTransaction((compound: any) => {
+          compound.addAction(clipItem.createSetInOutPointsAction(inT, outT));
+        }, "MCP: slice source");
+      });
+    } catch (e) {
+      throw new BridgeError(
+        "PREMIERE_API_ERROR",
+        `slice step failed: ${e instanceof Error ? e.message : e} | ` +
+          `clipItem: ${describeShape(clipItem)} | inT: ${describeShape(inT)}`,
+      );
+    }
   }
 
   const editor = getSequenceEditor(sequence);
@@ -165,15 +173,36 @@ export async function placeClip(params: PlaceClipParams): Promise<PlaceClipResul
   const a = params.audioTrackIndex ?? params.videoTrackIndex;
   const mode = params.mode ?? "overwrite";
 
-  await withLockedAccess(project, () => {
-    project.executeTransaction((compound: any) => {
-      const action =
-        mode === "insert"
-          ? editor.createInsertProjectItemAction(clipItem, atT, v, a, true)
-          : editor.createOverwriteItemAction(clipItem, atT, v, a);
-      compound.addAction(action);
-    }, `MCP: place ${params.projectItemName} @ ${params.atSeconds.toFixed(2)}s`);
-  });
+  // Some builds want the raw ProjectItem, others the ClipProjectItem — try both.
+  const errors: string[] = [];
+  let placed = false;
+  for (const [label, target] of [
+    ["clipProjectItem", clipItem],
+    ["rawProjectItem", item],
+  ] as const) {
+    try {
+      await withLockedAccess(project, () => {
+        project.executeTransaction((compound: any) => {
+          const action =
+            mode === "insert"
+              ? editor.createInsertProjectItemAction(target, atT, v, a, true)
+              : editor.createOverwriteItemAction(target, atT, v, a);
+          compound.addAction(action);
+        }, `MCP: place ${params.projectItemName} @ ${params.atSeconds.toFixed(2)}s`);
+      });
+      placed = true;
+      break;
+    } catch (e) {
+      errors.push(`${label}: ${e instanceof Error ? e.message : e}`);
+    }
+  }
+  if (!placed) {
+    throw new BridgeError(
+      "PREMIERE_API_ERROR",
+      `place step (${mode}) failed with both item forms — ${errors.join(" | ")} | ` +
+        `item: ${describeShape(item)} | editor: ${describeShape(editor)}`,
+    );
+  }
 
   return {
     ok: true,
@@ -204,27 +233,80 @@ export async function removeClips(params: RemoveClipsParams): Promise<RemoveClip
   });
   if (targets.length === 0) return { removed: 0 };
 
-  const selection = await ppro.TrackItemSelection.createEmptySelection();
+  // createEmptySelection's required arg type is undocumented on 26.x — probe
+  // guid first, then fall back to the sequence's live selection object.
+  let selection: any;
+  const selErrors: string[] = [];
+  for (const [label, args] of [
+    ["(sequence.guid)", [sequence.guid]],
+    ["(sequence)", [sequence]],
+  ] as const) {
+    try {
+      selection = await ppro.TrackItemSelection.createEmptySelection(...args);
+      if (selection) break;
+      selErrors.push(`${label}: returned ${String(selection)}`);
+    } catch (e) {
+      selErrors.push(`${label}: ${e instanceof Error ? e.message : e}`);
+    }
+  }
+  if (!selection && typeof sequence.getSelection === "function") {
+    try {
+      selection = await sequence.getSelection();
+      // Live UI selection — make sure we don't sweep up the user's own selection.
+      const preexisting: any[] = (await selection?.getTrackItems?.()) ?? [];
+      if (preexisting.length > 0) {
+        if (typeof selection.removeItem === "function") {
+          for (const p of preexisting) selection.removeItem(p);
+        } else {
+          throw new Error(
+            `live selection has ${preexisting.length} item(s) and no removeItem; ` +
+              `selection: ${describeShape(selection)}`,
+          );
+        }
+      }
+    } catch (e) {
+      selErrors.push(`getSelection: ${e instanceof Error ? e.message : e}`);
+      selection = null;
+    }
+  }
   if (!selection) {
     throw new BridgeError(
       "PREMIERE_API_ERROR",
-      `TrackItemSelection unavailable: ${describeShape(ppro.TrackItemSelection)}`,
+      `selection acquisition failed — ${selErrors.join(" | ")} | ` +
+        `TrackItemSelection: ${describeShape(ppro.TrackItemSelection)}`,
     );
   }
-  for (const t of targets) selection.addItem(t, false);
+  try {
+    for (const t of targets) selection.addItem(t, false);
+  } catch (e) {
+    throw new BridgeError(
+      "PREMIERE_API_ERROR",
+      `selection.addItem failed: ${e instanceof Error ? e.message : e} | ` +
+        `selection: ${describeShape(selection)}`,
+    );
+  }
 
   const editor = getSequenceEditor(sequence);
-  await withLockedAccess(project, () => {
-    project.executeTransaction((compound: any) => {
-      compound.addAction(
-        editor.createRemoveItemsAction(
-          selection,
-          params.ripple ?? false,
-          ppro.Constants.MediaType.VIDEO,
-        ),
-      );
-    }, `MCP: remove ${targets.length} clip(s)`);
-  });
+  try {
+    await withLockedAccess(project, () => {
+      project.executeTransaction((compound: any) => {
+        compound.addAction(
+          editor.createRemoveItemsAction(
+            selection,
+            params.ripple ?? false,
+            ppro.Constants.MediaType.VIDEO,
+            false, // shiftOverlapping
+          ),
+        );
+      }, `MCP: remove ${targets.length} clip(s)`);
+    });
+  } catch (e) {
+    throw new BridgeError(
+      "PREMIERE_API_ERROR",
+      `remove step failed: ${e instanceof Error ? e.message : e} | ` +
+        `selection: ${describeShape(selection)} | MediaType: ${describeShape(ppro.Constants.MediaType)}`,
+    );
+  }
   return { removed: targets.length };
 }
 
