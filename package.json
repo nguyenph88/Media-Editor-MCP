@@ -1,0 +1,19 @@
+{
+  "name": "premiere-pro-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCP server that lets Claude control Adobe Premiere Pro via a UXP plugin bridge",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "build:server": "npm run build -w @ppmcp/server",
+    "build:plugin": "npm run build -w @ppmcp/uxp-plugin",
+    "dev:server": "npm run dev -w @ppmcp/server",
+    "watch:plugin": "npm run watch -w @ppmcp/uxp-plugin"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

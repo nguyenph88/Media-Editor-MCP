@@ -1,0 +1,30 @@
+{
+  "manifestVersion": 5,
+  "id": "com.ppmcp.bridge",
+  "name": "Premiere MCP Bridge",
+  "version": "0.1.0",
+  "main": "index.html",
+  "host": [
+    {
+      "app": "premierepro",
+      "minVersion": "25.6.0"
+    }
+  ],
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "ppmcpPanel",
+      "label": {
+        "default": "MCP Bridge"
+      },
+      "minimumSize": { "width": 230, "height": 140 },
+      "preferredDockedSize": { "width": 260, "height": 220 },
+      "preferredFloatingSize": { "width": 260, "height": 220 }
+    }
+  ],
+  "requiredPermissions": {
+    "network": {
+      "domains": "all"
+    }
+  }
+}
