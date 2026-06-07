@@ -23,6 +23,7 @@ export const COMMANDS = [
   "add_clip_effect",
   "grade_track",
   "remove_track_effect",
+  "set_clip_lut",
 ] as const;
 
 export type CommandName = (typeof COMMANDS)[number];
@@ -458,4 +459,29 @@ export interface RemoveTrackEffectResult {
   /** Total effect instances removed across all clips. */
   removed: number;
   errored: number;
+}
+
+// ---------------------------------------------------------------------------
+// set_clip_lut — discovery probe: try to load a .cube / Creative Look into a
+// clip's Lumetri "Look" or "Input LUT" param (asset/string-valued, not numeric).
+// Returns rich diagnostics about the param so we can learn the value shape.
+// ---------------------------------------------------------------------------
+
+export interface SetClipLutParams {
+  sequenceId?: string;
+  videoTrackIndex: number;
+  clipIndex: number;
+  /** Absolute .cube path (Creative looks resolve by name; Input LUT by path). */
+  lutPath: string;
+  /** Lumetri param display name to target. Default "Look". */
+  paramName?: string;
+}
+
+export interface SetClipLutResult {
+  ok: boolean;
+  paramName: string;
+  /** Which value form + setter worked (empty if none). */
+  methodUsed: string;
+  /** Per-attempt log + param/keyframe shape dumps for discovery. */
+  diagnostics: string[];
 }

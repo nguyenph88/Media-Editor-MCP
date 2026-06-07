@@ -134,6 +134,15 @@ pace), `transcribe` (faster-whisper, word timestamps), `generate_srt`,
 - **No caption-track creation** → `.srt` is generated, you drag it in (5 seconds)
 - **Existing transitions are count-only** → bulk-apply warns and asks before overwriting; selective skip activates automatically if Adobe fixes the API
 - **No clip speed changes, no razor** (razor is emulated via slice-and-place)
+- **LUT / Creative Look can't be set by name/path** — Lumetri's `Look` and
+  `Input LUT` params are integer-indexed dropdowns (value `{value:N}`); they
+  accept a numeric index (set_clip_lut probe confirmed) but reject any `.cube`
+  path or look name, and there's no API to enumerate which index is which
+  film stock. So film LUTs (the Fuji/Kodak `.cube`s Premiere ships in
+  `Lumetri/LUTs/Creative`) must be applied **manually** in the Lumetri panel,
+  or blindly-by-index (fragile, version-dependent). `grade_track`'s numeric
+  Basic-Correction grading is the reliable programmatic path. `set_clip_lut`
+  is kept as a probe to re-test on future Premiere releases.
 - **MOGRT text is API-blocked** — a prototype (see commit d7ced57, since removed)
   verified that `SequenceEditor.insertMogrtFromPath` inserts Essential Graphics
   fine and numeric/boolean params are settable via

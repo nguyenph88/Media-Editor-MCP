@@ -22,6 +22,8 @@ import type {
   GradeTrackClipResult,
   RemoveTrackEffectParams,
   RemoveTrackEffectResult,
+  SetClipLutParams,
+  SetClipLutResult,
 } from "@ppmcp/protocol";
 import { BridgeError } from "../errors.js";
 import {
@@ -194,6 +196,14 @@ function safeGet<T>(fn: () => T): T | null {
     return fn();
   } catch {
     return null;
+  }
+}
+
+function safeJson(v: unknown): string {
+  try {
+    return JSON.stringify(v) ?? String(v);
+  } catch {
+    return `<unserializable ${describeShape(v)}>`;
   }
 }
 
@@ -395,6 +405,98 @@ export async function removeTrackEffect(
   }
 
   return { matchName, clipCount: items.length, removed, errored };
+}
+
+// ---------------------------------------------------------------------------
+// set_clip_lut — discovery probe for loading a LUT/Look into Lumetri
+// ---------------------------------------------------------------------------
+
+export async function setClipLut(params: SetClipLutParams): Promise<SetClipLutResult> {
+  const project = await getActiveProject();
+  const sequence = await resolveSequence(project, params.sequenceId);
+  const track = await getVideoTrack(sequence, params.videoTrackIndex);
+  const items = await getSortedClips(track);
+  if (params.clipIndex < 0 || params.clipIndex >= items.length) {
+    throw new BridgeError("CLIP_OUT_OF_RANGE", `Clip index ${params.clipIndex} out of range.`);
+  }
+  const item = items[params.clipIndex];
+  const paramName = params.paramName ?? "Look";
+  const diag: string[] = [];
+
+  // Locate Lumetri + the target param.
+  const chain = await item.getComponentChain();
+  const comps = await listChainComponents(chain);
+  let lumetri: any;
+  for (const c of comps) {
+    const mn = typeof c.getMatchName === "function" ? await c.getMatchName() : "";
+    if (mn === "AE.ADBE Lumetri") { lumetri = c; break; }
+  }
+  if (!lumetri) throw new BridgeError("BAD_PARAMS", "No AE.ADBE Lumetri on this clip (grade it first).");
+
+  const pcount = await lumetri.getParamCount();
+  let param: any;
+  for (let p = 0; p < pcount; p++) {
+    const pr = await lumetri.getParam(p);
+    const nm = typeof pr.getDisplayName === "function" ? await pr.getDisplayName() : String(pr.displayName ?? "");
+    if (nm === paramName) { param = pr; break; }
+  }
+  if (!param) throw new BridgeError("BAD_PARAMS", `Param "${paramName}" not found on Lumetri.`);
+
+  // Discovery: dump the param + its current keyframe/value shapes.
+  diag.push(`param: ${describeShape(param)}`);
+  try {
+    diag.push(`areKeyframesSupported: ${typeof param.areKeyframesSupported === "function" ? await param.areKeyframesSupported() : "n/a"}`);
+  } catch (e) { diag.push(`areKeyframesSupported threw: ${e instanceof Error ? e.message : e}`); }
+  for (const getter of ["getStartValue", "getKeyframePtr"]) {
+    try {
+      const kf = getter === "getStartValue"
+        ? await param.getStartValue?.()
+        : await param.getKeyframePtr?.(ppro.TickTime.createWithTicks("0"));
+      diag.push(`${getter}: ${describeShape(kf)} value=${kf && kf.value !== undefined ? JSON.stringify(safeJson(kf.value)) : "n/a"}`);
+    } catch (e) { diag.push(`${getter} threw: ${e instanceof Error ? e.message : e}`); }
+  }
+
+  // Value forms to try: Creative looks resolve by NAME (basename, no ext);
+  // a custom Input LUT wants the full path.
+  const base = params.lutPath.split(/[\\/]/).pop() ?? params.lutPath;
+  const noExt = base.replace(/\.[^.]+$/, "");
+  const valueForms: Array<[string, any]> = [
+    ["nameNoExt", noExt],
+    ["basename", base],
+    ["fullPath", params.lutPath],
+  ];
+
+  for (const [label, value] of valueForms) {
+    // Strategy A: createKeyframe(value) -> createSetValueAction
+    try {
+      await withLockedAccess(project, () => {
+        project.executeTransaction((compound: any) => {
+          const kf = param.createKeyframe(value);
+          compound.addAction(param.createSetValueAction(kf, true));
+        }, `MCP: set LUT ${paramName}=${label}`);
+      });
+      return { ok: true, paramName, methodUsed: `createKeyframe(${label}) -> setValueAction`, diagnostics: diag };
+    } catch (e) {
+      diag.push(`createKeyframe(${label}): ${e instanceof Error ? e.message : e}`);
+    }
+    // Strategy B: mutate getKeyframePtr(0).value -> createSetValueAction
+    try {
+      const kf = await param.getKeyframePtr(ppro.TickTime.createWithTicks("0"));
+      if (kf) {
+        kf.value = value;
+        await withLockedAccess(project, () => {
+          project.executeTransaction((compound: any) => {
+            compound.addAction(param.createSetValueAction(kf, true));
+          }, `MCP: set LUT(mut) ${paramName}=${label}`);
+        });
+        return { ok: true, paramName, methodUsed: `getKeyframePtr+mutate(${label})`, diagnostics: diag };
+      }
+    } catch (e) {
+      diag.push(`getKeyframePtr+mutate(${label}): ${e instanceof Error ? e.message : e}`);
+    }
+  }
+
+  return { ok: false, paramName, methodUsed: "", diagnostics: diag };
 }
 
 // ---------------------------------------------------------------------------

@@ -23,6 +23,7 @@ import {
   type AddClipEffectResult,
   type GradeTrackResult,
   type RemoveTrackEffectResult,
+  type SetClipLutResult,
 } from "@ppmcp/protocol";
 import { WsHost, BridgeError } from "../bridge/WsHost.js";
 import { config } from "../config.js";
@@ -608,6 +609,30 @@ export function registerTools(server: McpServer, bridge: WsHost): void {
         `Removed ${r.removed} ${r.matchName} instance(s) across ${r.clipCount} clips (${r.errored} errors).`,
         r,
       );
+    }),
+  );
+
+  server.registerTool(
+    "set_clip_lut",
+    {
+      title: "Load a LUT / Creative Look into a clip's Lumetri",
+      description:
+        "DISCOVERY: attempt to set a clip's Lumetri 'Look' or 'Input LUT' param to a .cube " +
+        "file (e.g. a Fuji/Kodak film look). Tries several value forms (name, basename, full " +
+        "path) and setters, and returns diagnostics about the param either way. The clip must " +
+        "already have Lumetri (grade it first).",
+      inputSchema: {
+        sequenceId: z.string().optional(),
+        videoTrackIndex: z.number().int().min(0).describe("V1 = 0"),
+        clipIndex: z.number().int().min(0),
+        lutPath: z.string().describe("Absolute .cube path"),
+        paramName: z.string().default("Look").describe('Lumetri param: "Look" (Creative) or "Input LUT" (Basic)'),
+      },
+    },
+    wrap(async (args) => {
+      const r = await bridge.sendCommand<SetClipLutResult>("set_clip_lut", args);
+      const head = r.ok ? `LUT set on "${r.paramName}" via ${r.methodUsed}.` : `Could not set "${r.paramName}".`;
+      return textResult(`${head}\nDiagnostics:\n${r.diagnostics.join("\n")}`, r);
     }),
   );
 
