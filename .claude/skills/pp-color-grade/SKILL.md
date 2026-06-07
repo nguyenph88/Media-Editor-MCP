@@ -28,6 +28,7 @@ Lumetri ranges: Temperature/Tint −100..100 · Exposure stops (~−2..2) · Con
 - **moody**: Temperature -10, Saturation 88, Contrast 28, Highlights -25, Blacks -20
 - **vibrant**: Saturation 140, Contrast 18, Exposure 0.2, Whites 10
 - **old-film / 80s-90s** (verified look): Temperature 20, Saturation 85, Highlights -25, Blacks 22, Contrast -8 — warm + milky lifted blacks + soft highlights + slightly faded. The lifted Blacks are the signature; keep Saturation 82–90.
+- **black-and-white / b&w** (verified look): Saturation 0, Contrast 20, Highlights -15, Blacks 12, Temperature 0 — Saturation 0 IS the conversion; the rest gives a filmic high-contrast mono with a slight black lift (vs. flat gray). Temperature/Tint have no visible effect once Saturation is 0.
 - **custom**: translate the user's words into these params; keep Saturation 80–145 and Contrast/Temperature within ±30 unless they ask for extreme.
 
 Keep grades subtle by default — reels read better with a gentle consistent push than a heavy one.
