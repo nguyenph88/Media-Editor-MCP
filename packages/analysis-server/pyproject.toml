@@ -13,6 +13,7 @@ dependencies = [
     "srt>=3.5.3",
     "numpy>=1.26",
     "soundfile>=0.12.1",
+    "opencv-python-headless>=4.10",
 ]
 
 [project.scripts]

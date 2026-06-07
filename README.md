@@ -101,8 +101,10 @@ in/out + place at exact time — the beat-edit primitive), `remove_clips`,
 
 **media-analysis** (6): `analysis_health`, `detect_beats` (beats + downbeats + BPM,
 any media format), `find_best_moments` (ranked most-interesting windows per clip —
-motion/sharpness/exposure scoring, ffmpeg+numpy, ~1s per clip), `transcribe`
-(faster-whisper, word timestamps), `generate_srt`, `render_text_png` (text overlays).
+motion 35% / sharpness 25% / faces 25% / exposure 15%; faces via YuNet on
+aspect-preserved frames, model lazy-downloads like the others; ~2s per clip),
+`transcribe` (faster-whisper, word timestamps), `generate_srt`, `render_text_png`
+(text overlays).
 
 ## The beat-edit recipe (what /pp-create-reel does internally)
 
