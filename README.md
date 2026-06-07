@@ -73,6 +73,23 @@ the panel dot goes 🟢.
 - *"transcribe the voiceover and make subtitles"* — produces an `.srt`; **drag it into Premiere** for native captions (the one manual step — Premiere's plugin API can't create caption tracks)
 - *"show me the clips on V1"*, *"what's in my project bin?"*
 
+### Slash commands (project skills)
+
+Repo-bundled skills in `.claude/skills/` — all prefixed `pp-`. They wrap the
+tools below with the verified recipes and gotchas baked in:
+
+| Command | What it does |
+|---|---|
+| `/pp-create-reel <music> <footage folder> [duration] [title]` | Full beat-synced reel: cuts on downbeats, music on A1, dissolves on every cut, optional PNG title on V2. **Ends at 59s by default, never 60** — YouTube rounds 60s+ past a minute. |
+| `/pp-mark-beats [beats\|downbeats]` | Detect the music on A1 and drop a marker per downbeat (or every beat) on the timeline ruler. Any length; markers chunked at 500/call. |
+| `/pp-add-cross-dissolve [duration]` | Cross Dissolve at every cut on V1 in one bulk pass, default 1s centered. |
+
+**Re-run semantics** (the API has no per-marker/per-transition identity, so
+re-running a skill is wipe-and-replace): `/pp-mark-beats` clears ALL ruler
+markers and re-marks; `/pp-add-cross-dissolve` replaces ALL V1 transitions
+with a fresh uniform set (use its skip mode to keep hand-placed ones).
+Idempotent — running twice never duplicates.
+
 ## Tools
 
 **premiere-pro** (15): `premiere_health`, `premiere_ping`, `get_project_info`,
@@ -86,14 +103,14 @@ in/out + place at exact time — the beat-edit primitive), `remove_clips`,
 any media format), `transcribe` (faster-whisper, word timestamps), `generate_srt`,
 `render_text_png` (text overlays).
 
-## The beat-edit recipe (what Claude does internally)
+## The beat-edit recipe (what /pp-create-reel does internally)
 
-1. `detect_beats` on the music → downbeat list
-2. Probe clip durations (`packages/analysis-server/tests/probe_durations.py`)
-3. `create_sequence` from a clip (settings match media), clear the seed clip
-4. Place music: `place_clip` the audio file, then `remove_clips` its video item — the linked audio stays on A1
-5. Per downbeat slot: `place_clip` with a varying source slice, **overshooting ~3 frames** — the next overwrite trims it frame-tight (this defeats mp4 start-offset quirks)
-6. `add_markers` at downbeats, `apply_transition_to_all_cuts` to finish
+1. `detect_beats` on the music → downbeat list; slot boundaries = `[0] + downbeats under target + [target]` (target 59s by default)
+2. Probe candidates (`packages/analysis-server/tests/probe_media.py` — duration/resolution/fps) and **reject any footage with an audio stream** — placed audio would land over the music and there is no audio-remove tool
+3. `create_sequence` from a clip (settings match media; prefer a 60fps seed for cut precision), clear the seed clip
+4. Place music **sliced `in=0, out=target` in this one placement** (audio on A1 can never be shortened later), then `remove_clips` its video item — the linked audio stays on A1
+5. Per downbeat slot: `place_clip` with a varying source slice, **overshooting ~3 frames** — the next overwrite trims it frame-tight (this defeats mp4 start-offset quirks). Strictly chronological; last slot gets an exact out, no overshoot
+6. `add_markers` at downbeats, `apply_transition_to_all_cuts` (0.5s reads better than 1s at 140+ BPM) to finish
 
 ## Known limitations (Premiere 26.x UXP API)
 
