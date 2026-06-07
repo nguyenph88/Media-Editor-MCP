@@ -7,9 +7,20 @@
  * via param.createKeyframe(value) -> createSetValueAction(kf, true) inside a
  * transaction. Verified live setting Scale on AE.ADBE Motion.
  */
-import type { SetClipParamParams, SetClipParamResult } from "@ppmcp/protocol";
+import type {
+  SetClipParamParams,
+  SetClipParamResult,
+  ProbeEffectsParams,
+  ProbeEffectsResult,
+  ListEffectsParams,
+  ListEffectsResult,
+  EffectInfo,
+  AddClipEffectParams,
+  AddClipEffectResult,
+} from "@ppmcp/protocol";
 import { BridgeError } from "../errors.js";
 import {
+  ppro,
   getActiveProject,
   resolveSequence,
   getVideoTrack,
@@ -105,4 +116,202 @@ export async function setClipParam(params: SetClipParamParams): Promise<SetClipP
     paramName: params.paramName,
     value: params.value,
   };
+}
+
+// ---------------------------------------------------------------------------
+// probe_effects — discovery for issue #4
+// ---------------------------------------------------------------------------
+
+export async function probeEffects(params: ProbeEffectsParams): Promise<ProbeEffectsResult> {
+  const project = await getActiveProject();
+  const sequence = await resolveSequence(project, params.sequenceId);
+  const track = await getVideoTrack(sequence, params.videoTrackIndex);
+  const items = await getSortedClips(track);
+  if (params.clipIndex < 0 || params.clipIndex >= items.length) {
+    throw new BridgeError(
+      "CLIP_OUT_OF_RANGE",
+      `Clip index ${params.clipIndex} out of range (track has ${items.length} clip(s)).`,
+    );
+  }
+  const item = items[params.clipIndex];
+  const notes: string[] = [];
+
+  // 1. component chain shape + existing components
+  let chainShape = "n/a";
+  const components: string[] = [];
+  try {
+    const chain = await item.getComponentChain();
+    chainShape = describeShape(chain);
+    const count =
+      typeof chain.getComponentCount === "function" ? await chain.getComponentCount() : 0;
+    for (let i = 0; i < count; i++) {
+      const c = await chain.getComponentAtIndex(i);
+      components.push(typeof c.getMatchName === "function" ? await c.getMatchName() : "?");
+    }
+  } catch (e) {
+    notes.push(`chain probe: ${e instanceof Error ? e.message : e}`);
+  }
+
+  // 2. ppro top-level keys that smell like effects/filters/components
+  const pproEffectKeys: string[] = [];
+  const factoryShapes: Record<string, string> = {};
+  try {
+    const keys = [
+      ...Object.getOwnPropertyNames(ppro),
+      ...Object.getOwnPropertyNames(Object.getPrototypeOf(ppro) ?? {}),
+    ];
+    const rx = /(effect|filter|component|lumetri|video|factory)/i;
+    for (const k of Array.from(new Set(keys))) {
+      if (!rx.test(k)) continue;
+      pproEffectKeys.push(k);
+      // dump the shape of anything that might be a factory/static class
+      const val = safeGet(() => (ppro as any)[k]);
+      if (val && (typeof val === "object" || typeof val === "function")) {
+        factoryShapes[k] = describeShape(val);
+      }
+    }
+  } catch (e) {
+    notes.push(`ppro key scan: ${e instanceof Error ? e.message : e}`);
+  }
+
+  return {
+    clipName: await clipName(item),
+    chainShape,
+    components,
+    pproEffectKeys,
+    factoryShapes,
+    notes,
+  };
+}
+
+function safeGet<T>(fn: () => T): T | null {
+  try {
+    return fn();
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// list_effects — VideoFilterFactory match/display names
+// ---------------------------------------------------------------------------
+
+export async function listEffects(params: ListEffectsParams): Promise<ListEffectsResult> {
+  const factory = (ppro as any).VideoFilterFactory;
+  if (!factory || typeof factory.getMatchNames !== "function") {
+    throw new BridgeError(
+      "PREMIERE_API_ERROR",
+      `VideoFilterFactory.getMatchNames unavailable — factory: ${describeShape(factory)}`,
+    );
+  }
+  const matchNames: string[] = await factory.getMatchNames();
+  let displayNames: string[] = [];
+  try {
+    displayNames = await factory.getDisplayNames();
+  } catch {
+    /* display names optional; align by index when present */
+  }
+  const filter = params.filter?.toLowerCase();
+  const effects: EffectInfo[] = matchNames.map((mn, i) => ({
+    matchName: String(mn),
+    displayName: String(displayNames[i] ?? ""),
+  }));
+  return {
+    effects: filter
+      ? effects.filter(
+          (e) =>
+            e.matchName.toLowerCase().includes(filter) ||
+            e.displayName.toLowerCase().includes(filter),
+        )
+      : effects,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// add_clip_effect — createComponent + append to the clip's chain
+// ---------------------------------------------------------------------------
+
+export async function addClipEffect(params: AddClipEffectParams): Promise<AddClipEffectResult> {
+  const project = await getActiveProject();
+  const sequence = await resolveSequence(project, params.sequenceId);
+  const track = await getVideoTrack(sequence, params.videoTrackIndex);
+  const items = await getSortedClips(track);
+  if (params.clipIndex < 0 || params.clipIndex >= items.length) {
+    throw new BridgeError(
+      "CLIP_OUT_OF_RANGE",
+      `Clip index ${params.clipIndex} out of range (track has ${items.length} clip(s)).`,
+    );
+  }
+  const item = items[params.clipIndex];
+
+  const factory = (ppro as any).VideoFilterFactory;
+  if (!factory || typeof factory.createComponent !== "function") {
+    throw new BridgeError(
+      "PREMIERE_API_ERROR",
+      `VideoFilterFactory.createComponent unavailable — factory: ${describeShape(factory)}`,
+    );
+  }
+
+  const chain = await item.getComponentChain();
+
+  // Step 1: create the component. Try a few arg shapes — "Illegal Parameter
+  // type" on a bare string means createComponent wants something richer.
+  let component: any;
+  const createErrors: string[] = [];
+  const createAttempts: Array<{ label: string; run: () => any }> = [
+    { label: "createComponent(matchName)", run: () => factory.createComponent(params.matchName) },
+    { label: "createComponent(matchName,true)", run: () => factory.createComponent(params.matchName, true) },
+    {
+      label: "createComponentByDisplayName(matchName)",
+      run: () =>
+        typeof factory.createComponentByDisplayName === "function"
+          ? factory.createComponentByDisplayName(params.matchName)
+          : undefined,
+    },
+  ];
+  for (const attempt of createAttempts) {
+    try {
+      const c = await attempt.run();
+      if (c) {
+        component = c;
+        createErrors.push(`${attempt.label}: OK -> ${describeShape(c)}`);
+        break;
+      }
+      createErrors.push(`${attempt.label}: returned ${String(c)}`);
+    } catch (e) {
+      createErrors.push(`${attempt.label}: ${e instanceof Error ? e.message : e}`);
+    }
+  }
+  if (!component) {
+    throw new BridgeError(
+      "PREMIERE_API_ERROR",
+      `createComponent failed — ${createErrors.join(" | ")} | factory: ${describeShape(factory)}`,
+    );
+  }
+
+  // Step 2: append it to the chain inside a transaction.
+  try {
+    await withLockedAccess(project, () => {
+      project.executeTransaction((compound: any) => {
+        compound.addAction(chain.createAppendComponentAction(component));
+      }, `MCP: add effect ${params.matchName}`);
+    });
+  } catch (e) {
+    throw new BridgeError(
+      "PREMIERE_API_ERROR",
+      `append failed: ${e instanceof Error ? e.message : e} | component: ${describeShape(component)} | ` +
+        `createLog: ${createErrors.join(" | ")}`,
+    );
+  }
+
+  // Re-read components so the caller can confirm + see the new index.
+  const components: string[] = [];
+  const after = await item.getComponentChain();
+  const count = await after.getComponentCount();
+  for (let i = 0; i < count; i++) {
+    const c = await after.getComponentAtIndex(i);
+    components.push(typeof c.getMatchName === "function" ? await c.getMatchName() : "?");
+  }
+
+  return { ok: true, clipName: await clipName(item), matchName: params.matchName, components };
 }

@@ -18,6 +18,9 @@ export const COMMANDS = [
   "remove_clips",
   "create_sequence",
   "set_clip_param",
+  "probe_effects",
+  "list_effects",
+  "add_clip_effect",
 ] as const;
 
 export type CommandName = (typeof COMMANDS)[number];
@@ -331,4 +334,65 @@ export interface SetClipParamResult {
   componentMatchName: string;
   paramName: string;
   value: number;
+}
+
+// ---------------------------------------------------------------------------
+// probe_effects — read-only discovery for issue #4 (can we ADD Lumetri?).
+// Dumps the API surfaces that would let us add an effect component to a clip.
+// ---------------------------------------------------------------------------
+
+export interface ProbeEffectsParams {
+  sequenceId?: string;
+  videoTrackIndex: number;
+  clipIndex: number;
+}
+
+export interface ProbeEffectsResult {
+  clipName: string;
+  /** Shape dump of the clip's component chain (what add-methods exist?). */
+  chainShape: string;
+  /** matchNames of components already on the clip. */
+  components: string[];
+  /** ppro top-level keys that look effect/filter/component related. */
+  pproEffectKeys: string[];
+  /** Shape dumps of promising factories found on ppro. */
+  factoryShapes: Record<string, string>;
+  /** Free-form notes from each probe attempt. */
+  notes: string[];
+}
+
+// ---------------------------------------------------------------------------
+// list_effects / add_clip_effect — verified path from probe_effects (#4):
+// VideoFilterFactory.createComponent(matchName) -> chain.createAppendComponentAction.
+// ---------------------------------------------------------------------------
+
+export interface ListEffectsParams {
+  /** Case-insensitive substring filter on matchName or display name. */
+  filter?: string;
+}
+
+export interface EffectInfo {
+  matchName: string;
+  displayName: string;
+}
+
+export interface ListEffectsResult {
+  effects: EffectInfo[];
+}
+
+export interface AddClipEffectParams {
+  sequenceId?: string;
+  videoTrackIndex: number;
+  /** 0-based clip index on the track (sorted by start time). */
+  clipIndex: number;
+  /** Effect matchName from list_effects (e.g. the Lumetri Color matchName). */
+  matchName: string;
+}
+
+export interface AddClipEffectResult {
+  ok: boolean;
+  clipName: string;
+  matchName: string;
+  /** matchNames now on the clip, after adding. */
+  components: string[];
 }

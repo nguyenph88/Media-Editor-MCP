@@ -22,7 +22,7 @@ import {
   removeClips,
   createSequence,
 } from "./handlers/edit.js";
-import { setClipParam } from "./handlers/clipfx.js";
+import { setClipParam, probeEffects, listEffects, addClipEffect } from "./handlers/clipfx.js";
 
 type Handler = (params: never) => Promise<unknown>;
 
@@ -42,6 +42,9 @@ const handlers: Record<string, Handler> = {
   remove_clips: removeClips,
   create_sequence: createSequence,
   set_clip_param: setClipParam,
+  probe_effects: probeEffects,
+  list_effects: listEffects,
+  add_clip_effect: addClipEffect,
 };
 
 export async function dispatch(

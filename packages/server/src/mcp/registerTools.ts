@@ -18,6 +18,9 @@ import {
   type ProjectInfoResult,
   type RemoveClipsResult,
   type SetClipParamResult,
+  type ProbeEffectsResult,
+  type ListEffectsResult,
+  type AddClipEffectResult,
 } from "@ppmcp/protocol";
 import { WsHost, BridgeError } from "../bridge/WsHost.js";
 import { config } from "../config.js";
@@ -472,6 +475,82 @@ export function registerTools(server: McpServer, bridge: WsHost): void {
     wrap(async (args) => {
       const r = await bridge.sendCommand<SetClipParamResult>("set_clip_param", args);
       return textResult(`Set ${r.componentMatchName}/${r.paramName} = ${r.value} on "${r.clipName}".`, r);
+    }),
+  );
+
+  // -------------------------------------------------------------------------
+  // probe_effects — discovery for adding Lumetri/effects (issue #4)
+  // -------------------------------------------------------------------------
+  server.registerTool(
+    "probe_effects",
+    {
+      title: "Probe the effect/component API surface",
+      description:
+        "Read-only discovery: dumps a clip's component-chain shape, its existing " +
+        "components, and ppro effect/filter/factory keys — to find whether/how an " +
+        "effect (e.g. Lumetri Color) can be added to a clip.",
+      inputSchema: {
+        sequenceId: z.string().optional().describe("Sequence id; defaults to the active sequence"),
+        videoTrackIndex: z.number().int().min(0).describe("V1 = 0"),
+        clipIndex: z.number().int().min(0).describe("0-based clip index on the track (by start time)"),
+      },
+    },
+    wrap(async (args) => {
+      const r = await bridge.sendCommand<ProbeEffectsResult>("probe_effects", args);
+      const lines = [
+        `clip: ${r.clipName}`,
+        `chain: ${r.chainShape}`,
+        `components: ${r.components.join(", ")}`,
+        `ppro effect keys: ${r.pproEffectKeys.join(", ")}`,
+        ...Object.entries(r.factoryShapes).map(([k, v]) => `  ${k}: ${v}`),
+        ...(r.notes.length ? [`notes: ${r.notes.join(" | ")}`] : []),
+      ];
+      return textResult(lines.join("\n"), r);
+    }),
+  );
+
+  server.registerTool(
+    "list_effects",
+    {
+      title: "List available video effects",
+      description:
+        "List installed video effect matchNames + display names (from VideoFilterFactory). " +
+        'Optional case-insensitive filter, e.g. "lumetri" or "color".',
+      inputSchema: {
+        filter: z.string().optional().describe("Case-insensitive substring filter"),
+      },
+    },
+    wrap(async (args) => {
+      const r = await bridge.sendCommand<ListEffectsResult>("list_effects", args);
+      const lines = r.effects.map((e) => `${e.displayName || "(no name)"} — ${e.matchName}`);
+      return textResult(
+        r.effects.length ? `${r.effects.length} effect(s):\n${lines.join("\n")}` : "No effects matched.",
+        r,
+      );
+    }),
+  );
+
+  server.registerTool(
+    "add_clip_effect",
+    {
+      title: "Add a video effect to a clip",
+      description:
+        "Add a video effect (e.g. Lumetri Color) to a placed clip via its matchName " +
+        "(see list_effects). After adding, use set_clip_param with the effect's " +
+        "componentMatchName to adjust its parameters (Exposure, Saturation, etc.).",
+      inputSchema: {
+        sequenceId: z.string().optional().describe("Sequence id; defaults to the active sequence"),
+        videoTrackIndex: z.number().int().min(0).describe("V1 = 0"),
+        clipIndex: z.number().int().min(0).describe("0-based clip index on the track (by start time)"),
+        matchName: z.string().describe("Effect matchName from list_effects"),
+      },
+    },
+    wrap(async (args) => {
+      const r = await bridge.sendCommand<AddClipEffectResult>("add_clip_effect", args);
+      return textResult(
+        `Added ${r.matchName} to "${r.clipName}". Components now: ${r.components.join(", ")}.`,
+        r,
+      );
     }),
   );
 
