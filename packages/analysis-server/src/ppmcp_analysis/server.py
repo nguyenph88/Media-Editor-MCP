@@ -92,6 +92,23 @@ def find_best_moments(
 
 
 @mcp.tool()
+def detect_energy(file_path: str, slot_boundaries: list[float]) -> dict[str, Any]:
+    """Measure the music's energy level (0..1) for each timeline slot.
+
+    slot_boundaries: timeline seconds marking slot edges (e.g. the downbeats
+    used for a beat-edit, plus the final cut: [0, 1.82, 3.54, ..., 59]).
+    Returns one entry per slot with energy 0..1 (normalized across the track)
+    and a label calm/build/drop. Use it to place the MOST kinetic footage
+    (highest find_best_moments motion) on 'drop' slots and calm clips on
+    'calm' slots — the edit then breathes with the music. RMS loudness 60% +
+    onset strength 40%.
+    """
+    from .energy import detect_energy as _detect_energy
+
+    return _detect_energy(file_path, slot_boundaries)
+
+
+@mcp.tool()
 def transcribe(
     file_path: str, model_size: str = "small", word_timestamps: bool = True
 ) -> dict[str, Any]:
