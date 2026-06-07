@@ -99,12 +99,13 @@ in/out + place at exact time — the beat-edit primitive), `remove_clips`,
 `add_markers` (batched, colored), `list_available_transitions`,
 `apply_transition_to_all_cuts`, `apply_transition_to_clip`.
 
-**media-analysis** (6): `analysis_health`, `detect_beats` (beats + downbeats + BPM,
+**media-analysis** (7): `analysis_health`, `detect_beats` (beats + downbeats + BPM,
 any media format), `find_best_moments` (ranked most-interesting windows per clip —
 motion 35% / sharpness 25% / faces 25% / exposure 15%; faces via YuNet on
 aspect-preserved frames, model lazy-downloads like the others; ~2s per clip),
-`transcribe` (faster-whisper, word timestamps), `generate_srt`, `render_text_png`
-(text overlays).
+`detect_energy` (per-slot music energy 0..1 + calm/build/drop label — RMS 60% +
+onset 40%; maps kinetic footage onto drops), `transcribe` (faster-whisper, word
+timestamps), `generate_srt`, `render_text_png` (text overlays).
 
 ## The beat-edit recipe (what /pp-create-reel does internally)
 

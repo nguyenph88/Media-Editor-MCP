@@ -21,6 +21,7 @@ Build a reel cut on the beat. Verified twice live (Mui Ne reel, Địa Đàng re
 1. `detect_beats` on the music → `bpm`, `downbeats`. Use **downbeats** (bar starts) as cut points.
 2. Slot boundaries: `[0] + downbeats strictly below target + [target]` — first slot starts at timeline 0 (absorbs any pickup before the first downbeat); the **final boundary is exactly the target (59.0)**, so the last slot runs from the last downbeat under 59 to 59.0 (often a short stinger — that's intentional).
 3. Slice the music `in=0, out=target` **at placement time** — the A1 audio clip can never be shortened later (`remove_clips` is video-only), so the duration must be right in this single placement.
+4. `detect_energy` on the music with the slot boundaries → per-slot energy 0..1 + calm/build/drop label. This drives clip-to-slot assignment in Step 4.
 
 ## Step 2 — Probe & pick footage
 
@@ -51,7 +52,8 @@ For each slot i (chronological order, **strictly sequential calls** — never pa
 
 - `at = boundary[i]`, `dur = boundary[i+1] - boundary[i]`
 - `in` comes from the clip's `find_best_moments` windows: appearance k of a clip uses its k-th ranked window's `start` (fall back to early/middle/late thirds only if a clip has fewer windows than appearances). Never reuse a window.
-- **HOOK RULE: slot 1 gets the single highest-scoring window across ALL clips** — the first 1.5s decides whether viewers stay. Don't spend a clip's best window mid-reel if it can open the video.
+- **ENERGY MAPPING (#2): match clip motion to slot energy.** Build a pool of (clip, window) instances with motion scores; sort the pool by motion and the slots by `detect_energy` level, then zip them — the most kinetic windows land on 'drop' slots, calm windows on 'calm' slots. Then fix adjacency (no same clip back-to-back) by swapping with the nearest different-clip slot.
+- **HOOK RULE (overrides energy for slot 0): the single highest-SCORING window across ALL clips opens the reel** — the first 1.5s decides whether viewers stay. Place it at slot 0 regardless of that slot's energy.
 - `out = in + dur + 0.05` (**~3-frame overshoot** — the NEXT placement's overwrite trims it frame-tight; this defeats mp4 start-offset snapping). Clamp `out ≤ clip duration`; shift `in` down if needed.
 - **Last slot: NO overshoot** (`out = in + dur` exactly) — nothing after it to trim.
 - Clip order: rotate the roster in shuffled rounds, never the same clip in adjacent slots.
