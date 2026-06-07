@@ -8,6 +8,7 @@ import {
   type ApplyTransitionToClipParams,
   type ApplyTransitionToClipResult,
   type CutResult,
+  type ExistingTransitionInfo,
   type TransitionAlignment,
 } from "@ppmcp/protocol";
 import { BridgeError } from "../errors.js";
@@ -21,6 +22,7 @@ import {
   getTimebase,
   secondsToFrameSnappedTickTime,
   withLockedAccess,
+  describeShape,
   type Timebase,
 } from "./ppro.js";
 
@@ -88,6 +90,87 @@ function buildOptions(
   return opts;
 }
 
+/**
+ * Detect transitions already on a track.
+ *
+ * Premiere 26.x API reality: `getTrackItems(TrackItemType.TRANSITION)` returns
+ * an array with the CORRECT COUNT but null elements — so the count is reliable
+ * while positions/names are not. We return both: `count` (always trustworthy)
+ * and `items` (usable objects only; empty on current builds, lights up
+ * automatically if Adobe starts returning real objects).
+ */
+async function detectTransitions(track: any): Promise<{ count: number; items: any[] }> {
+  const types = ppro.Constants?.TrackItemType;
+  const transitionType = types?.TRANSITION ?? types?.Transition;
+  if (transitionType === undefined) {
+    throw new BridgeError(
+      "PREMIERE_API_ERROR",
+      `Cannot detect existing transitions: TrackItemType.TRANSITION not found. ` +
+        `TrackItemType: ${describeShape(types)}`,
+    );
+  }
+  const raw = await track.getTrackItems(transitionType, false);
+  const all = Array.isArray(raw) ? raw : [];
+  const items = all.filter(
+    (i: any) => i && typeof i.getStartTime === "function" && typeof i.getEndTime === "function",
+  );
+  return { count: all.length, items };
+}
+
+/** Best-effort display name of a transition track item. */
+async function transitionItemName(item: any): Promise<string> {
+  try {
+    if (typeof item.getName === "function") {
+      const n = await item.getName();
+      if (n) return String(n);
+    }
+    if (item.name) return String(item.name);
+    if (typeof item.getMatchName === "function") {
+      const m = await item.getMatchName();
+      if (m) return String(m);
+    }
+  } catch {
+    /* fall through */
+  }
+  return "transition";
+}
+
+/**
+ * Map each cut time to the transition item spanning it (only possible when the
+ * API returns real transition objects). A transition at a cut contains the cut
+ * time within [start, end] regardless of alignment, so containment with a
+ * half-frame tolerance covers all cases.
+ */
+async function mapTransitionsToCuts(
+  transitionItems: any[],
+  cuts: Array<{ cutIndex: number; leftClip: string; rightClip: string; atSeconds: number }>,
+  timebase: Timebase,
+): Promise<ExistingTransitionInfo[]> {
+  if (transitionItems.length === 0) return [];
+
+  const spans = await Promise.all(
+    transitionItems.map(async (item) => ({
+      start: (await item.getStartTime()).seconds as number,
+      end: (await item.getEndTime()).seconds as number,
+      name: await transitionItemName(item),
+    })),
+  );
+
+  const eps = 1 / timebase.fps / 2;
+  const found: ExistingTransitionInfo[] = [];
+  for (const cut of cuts) {
+    const hit = spans.find((s) => s.start - eps <= cut.atSeconds && cut.atSeconds <= s.end + eps);
+    if (hit) {
+      found.push({
+        ...cut,
+        transitionName: hit.name,
+        durationSeconds: Math.round((hit.end - hit.start) * 100) / 100,
+      });
+    }
+  }
+  return found;
+}
+
 /** Heuristic: classify Premiere errors about missing handle media. */
 function isInsufficientMediaError(message: string): boolean {
   const m = message.toLowerCase();
@@ -131,6 +214,7 @@ export async function applyTransitionToAllCuts(
   const alignment = params.alignment ?? "center";
   const trackIndex = params.videoTrackIndex ?? 0;
   const skipInsufficient = params.skipInsufficientHandles ?? true;
+  const onExisting = params.onExisting ?? "ask";
 
   const project = await getActiveProject();
   const sequence = await resolveSequence(project, params.sequenceId);
@@ -138,60 +222,134 @@ export async function applyTransitionToAllCuts(
   const timebase = await getTimebase(sequence);
   const items = await getSortedClips(track);
 
+  // Pass 1: compute the cuts (truly adjacent clip pairs; a gap is not a cut).
+  interface Cut {
+    cutIndex: number;
+    leftClip: string;
+    rightClip: string;
+    atSeconds: number;
+    left: any;
+    gapSeconds: number;
+  }
+  const cuts: Cut[] = [];
+  for (let i = 0; i < items.length - 1; i++) {
+    const left = items[i];
+    const right = items[i + 1];
+    const leftEnd = (await left.getEndTime()).seconds as number;
+    const rightStart = (await right.getStartTime()).seconds as number;
+    cuts.push({
+      cutIndex: i,
+      leftClip: await clipName(left),
+      rightClip: await clipName(right),
+      atSeconds: leftEnd,
+      left,
+      gapSeconds: rightStart - leftEnd,
+    });
+  }
+  const halfFrame = 1 / timebase.fps / 2;
+
+  // Pass 2: detect transitions already on the track. The count is always
+  // reliable; per-cut positions only when the API returns real objects.
+  const detected = await detectTransitions(track);
+  const positionsKnown = detected.items.length === detected.count;
+  const existing = positionsKnown
+    ? await mapTransitionsToCuts(
+        detected.items,
+        cuts.map(({ cutIndex, leftClip, rightClip, atSeconds }) => ({
+          cutIndex,
+          leftClip,
+          rightClip,
+          atSeconds,
+        })),
+        timebase,
+      )
+    : [];
+  const existingByCut = new Map(existing.map((e) => [e.cutIndex, e]));
+
+  const base = {
+    trackIndex,
+    matchName,
+    durationSeconds,
+    cutsFound: cuts.length,
+    existingCount: detected.count,
+    existingTransitions: existing,
+  };
+
+  // "ask" + something found → apply NOTHING; client confirms with the user.
+  if (onExisting === "ask" && detected.count > 0) {
+    return {
+      ...base,
+      applied: 0,
+      skipped: 0,
+      errored: 0,
+      results: [],
+      pendingConfirmation: true,
+    };
+  }
+
+  // "skip" needs per-cut positions, which current Premiere builds don't expose.
+  if (onExisting === "skip" && detected.count > 0 && !positionsKnown) {
+    throw new BridgeError(
+      "PREMIERE_API_ERROR",
+      `Cannot skip selectively: Premiere reports ${detected.count} existing transition(s) on ` +
+        "this track but its API does not expose their positions (known limitation in " +
+        "Premiere 26.x UXP). Options: onExisting='overwrite' to re-apply a uniform " +
+        "transition at every cut, or adjust the timeline manually.",
+    );
+  }
+
+  // Pass 3: apply.
   const transition = await createTransition(matchName);
   // Transition goes on the LEFT clip's END edge — that edge IS the cut.
   const opts = buildOptions(false, alignment, durationSeconds, timebase);
 
   const results: CutResult[] = [];
-  for (let i = 0; i < items.length - 1; i++) {
-    const left = items[i];
-    const right = items[i + 1];
-    const cut: Omit<CutResult, "status"> = {
-      cutIndex: i,
-      leftClip: await clipName(left),
-      rightClip: await clipName(right),
-      atSeconds: (await left.getEndTime()).seconds as number,
-    };
+  for (const cut of cuts) {
+    const { left, gapSeconds, ...info } = cut;
 
-    // Only treat truly adjacent clips as cuts — a gap is not a cut.
-    const leftEnd = (await left.getEndTime()).seconds as number;
-    const rightStart = (await right.getStartTime()).seconds as number;
-    if (Math.abs(rightStart - leftEnd) > 1 / timebase.fps / 2) {
+    if (Math.abs(gapSeconds) > halfFrame) {
       results.push({
-        ...cut,
+        ...info,
         status: "skipped_insufficient_handles",
-        message: `Gap between clips (${(rightStart - leftEnd).toFixed(2)}s) — no cut here.`,
+        message: `Gap between clips (${gapSeconds.toFixed(2)}s) — no cut here.`,
+      });
+      continue;
+    }
+
+    const already = existingByCut.get(cut.cutIndex);
+    if (already && onExisting === "skip") {
+      results.push({
+        ...info,
+        status: "skipped_existing",
+        message: `Kept existing "${already.transitionName}" (${already.durationSeconds}s).`,
       });
       continue;
     }
 
     try {
-      await applyOne(project, left, transition, opts, `MCP: ${matchName} @ cut ${i}`);
-      results.push({ ...cut, status: "applied" });
+      await applyOne(project, left, transition, opts, `MCP: ${matchName} @ cut ${cut.cutIndex}`);
+      results.push({ ...info, status: "applied" });
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       if (skipInsufficient && isInsufficientMediaError(message)) {
         results.push({
-          ...cut,
+          ...info,
           status: "skipped_insufficient_handles",
           message:
             "Not enough handle media beyond the cut for a two-sided transition. " +
             "Trim the clips slightly or use a shorter duration.",
         });
       } else {
-        results.push({ ...cut, status: "error", message });
+        results.push({ ...info, status: "error", message });
       }
     }
   }
 
   const count = (s: CutResult["status"]) => results.filter((r) => r.status === s).length;
   return {
-    trackIndex,
-    matchName,
-    durationSeconds,
-    cutsFound: Math.max(items.length - 1, 0),
+    ...base,
     applied: count("applied"),
-    skipped: count("skipped_insufficient_handles"),
+    skipped: count("skipped_insufficient_handles") + count("skipped_existing"),
     errored: count("error"),
     results,
   };

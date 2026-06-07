@@ -95,6 +95,15 @@ export interface ListAvailableTransitionsResult {
   transitions: string[];
 }
 
+/**
+ * What to do when a cut already has a transition:
+ * - "ask"       — if any exist, apply NOTHING and return them in
+ *                 `existingTransitions` so the client can confirm with the user
+ * - "overwrite" — replace them (type + duration + alignment all change)
+ * - "skip"      — leave those cuts untouched, fill only the empty cuts
+ */
+export type OnExistingPolicy = "ask" | "overwrite" | "skip";
+
 export interface ApplyTransitionToAllCutsParams {
   sequenceId?: string;
   /** 0-based video track index. Default 0 (V1). */
@@ -104,9 +113,25 @@ export interface ApplyTransitionToAllCutsParams {
   alignment?: TransitionAlignment;
   /** Skip cuts lacking handle media instead of failing. Default true. */
   skipInsufficientHandles?: boolean;
+  /** Default "ask". */
+  onExisting?: OnExistingPolicy;
 }
 
-export type CutStatus = "applied" | "skipped_insufficient_handles" | "error";
+export type CutStatus =
+  | "applied"
+  | "skipped_insufficient_handles"
+  | "skipped_existing"
+  | "error";
+
+export interface ExistingTransitionInfo {
+  cutIndex: number;
+  leftClip: string;
+  rightClip: string;
+  atSeconds: number;
+  /** Best-effort display name of the transition already at this cut. */
+  transitionName: string;
+  durationSeconds: number;
+}
 
 export interface CutResult {
   cutIndex: number;
@@ -126,6 +151,20 @@ export interface ApplyTransitionToAllCutsResult {
   skipped: number;
   errored: number;
   results: CutResult[];
+  /**
+   * True when onExisting was "ask", existing transitions were found, and
+   * NOTHING was applied. The client should confirm with the user and call
+   * again with onExisting "overwrite" (or "skip", when positions are known).
+   */
+  pendingConfirmation?: boolean;
+  /** Number of transitions already on the track (count is always reliable). */
+  existingCount?: number;
+  /**
+   * Per-cut detail of existing transitions. Premiere 26.x's UXP API returns
+   * transition items as nulls (count only, no positions), so this is usually
+   * empty — it lights up automatically if Adobe fixes the API.
+   */
+  existingTransitions?: ExistingTransitionInfo[];
 }
 
 export interface ApplyTransitionToClipParams {

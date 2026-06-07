@@ -13,8 +13,12 @@ import WebSocket from "ws";
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const serverEntry = path.join(root, "packages", "server", "dist", "index.js");
 
+// Own port so the test never collides with (or hijacks!) a live session's bridge.
+const WS_PORT = 3199;
+
 const child = spawn(process.execPath, [serverEntry], {
   stdio: ["pipe", "pipe", "pipe"],
+  env: { ...process.env, PPMCP_WS_PORT: String(WS_PORT) },
 });
 child.stderr.on("data", (d) => process.stderr.write(`[server] ${d}`));
 
@@ -55,7 +59,7 @@ child.stdout.on("data", (chunk) => {
 // --- fake UXP plugin -------------------------------------------------------
 function startFakePlugin() {
   return new Promise((resolve, reject) => {
-    const ws = new WebSocket("ws://127.0.0.1:3001");
+    const ws = new WebSocket(`ws://127.0.0.1:${WS_PORT}`);
     ws.on("open", () => {
       ws.send(
         JSON.stringify({

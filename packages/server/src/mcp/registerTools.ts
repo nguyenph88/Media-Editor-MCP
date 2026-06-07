@@ -161,7 +161,10 @@ export function registerTools(server: McpServer, bridge: WsHost): void {
       description:
         "Apply a video transition (default: Cross Dissolve) at every cut between adjacent clips " +
         "on a video track. Returns a per-cut report including cuts skipped for insufficient " +
-        "handle media. This is the main bulk tool — one call covers a whole 20-30 clip timeline.",
+        "handle media. This is the main bulk tool — one call covers a whole 20-30 clip timeline. " +
+        "IMPORTANT: by default (onExisting='ask'), if any cut already has a transition, NOTHING " +
+        "is applied and the existing transitions are returned — present them to the user and ask " +
+        "whether to overwrite or keep them, then call again with onExisting='overwrite' or 'skip'.",
       inputSchema: {
         sequenceId: z.string().optional().describe("Sequence id; defaults to the active sequence"),
         videoTrackIndex: z
@@ -185,6 +188,14 @@ export function registerTools(server: McpServer, bridge: WsHost): void {
           .boolean()
           .default(true)
           .describe("Skip cuts that lack handle media instead of erroring"),
+        onExisting: z
+          .enum(["ask", "overwrite", "skip"])
+          .default("ask")
+          .describe(
+            "What to do with cuts that already have a transition: 'ask' (default) applies " +
+              "nothing if any exist and returns them for user confirmation; 'overwrite' " +
+              "replaces them; 'skip' fills only the empty cuts",
+          ),
       },
     },
     wrap(async (args) => {
@@ -193,6 +204,37 @@ export function registerTools(server: McpServer, bridge: WsHost): void {
         args,
         config.bulkCommandTimeoutMs,
       );
+
+      if (r.pendingConfirmation) {
+        const detail = r.existingTransitions ?? [];
+        const lines: string[] = [];
+        if (detail.length > 0) {
+          lines.push(
+            `NOTHING APPLIED YET — ${detail.length} of ${r.cutsFound} cut(s) already have a ` +
+              "transition. Ask the user whether to overwrite them or keep them:",
+          );
+          for (const e of detail) {
+            lines.push(
+              `  cut ${e.cutIndex} @ ${e.atSeconds.toFixed(2)}s (${e.leftClip} → ${e.rightClip}): ` +
+                `"${e.transitionName}" (${e.durationSeconds}s)`,
+            );
+          }
+          lines.push(
+            "Then call this tool again with onExisting='overwrite' (replace them) " +
+              "or onExisting='skip' (keep them, fill only empty cuts).",
+          );
+        } else {
+          lines.push(
+            `NOTHING APPLIED YET — the track already has ${r.existingCount} transition(s). ` +
+              "Premiere's API reports the count but not their positions or types " +
+              "(Premiere 26.x UXP limitation), so selective skipping is not possible. " +
+              "Ask the user: overwrite ALL cuts with the requested transition " +
+              "(call again with onExisting='overwrite'), or cancel and let them adjust manually.",
+          );
+        }
+        return textResult(lines.join("\n"), r);
+      }
+
       const lines = [
         `Applied "${r.matchName}" (${r.durationSeconds}s) on track V${r.trackIndex + 1}: ` +
           `${r.applied}/${r.cutsFound} cuts applied, ${r.skipped} skipped, ${r.errored} errored.`,
