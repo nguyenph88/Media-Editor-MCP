@@ -81,6 +81,7 @@ tools below with the verified recipes and gotchas baked in:
 | Command | What it does |
 |---|---|
 | `/pp-create-reel <music> <footage folder> [duration] [title]` | Full beat-synced reel: skips the instrumental intro (opens on the first vocal), cuts on downbeats, smart slice-picking (motion/sharpness/faces), energy-mapped placement, beat punch-ins, a seamless loop ending, dissolves on every cut, optional PNG title on V2. **Ends at 59s by default, never 60** — YouTube rounds 60s+ past a minute. |
+| `/pp-create-reel-once <music> <footage folder> [chronological] [beatsPerClip]` | Same engine, but each clip appears **once** and the reel is whatever length the clips naturally fill (not forced to 59s) — for when you have few clips (5-8). Supports chronological order and spanning a clip across 2-3 beats. No repeats, no loop ending. |
 | `/pp-mark-beats [beats\|downbeats]` | Detect the music on A1 and drop a marker per downbeat (or every beat) on the timeline ruler. Any length; markers chunked at 500/call. |
 | `/pp-add-cross-dissolve [duration]` | Cross Dissolve at every cut on V1 in one bulk pass, default 1s centered. |
 
