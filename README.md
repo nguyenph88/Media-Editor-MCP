@@ -92,12 +92,14 @@ Idempotent — running twice never duplicates.
 
 ## Tools
 
-**premiere-pro** (15): `premiere_health`, `premiere_ping`, `get_project_info`,
+**premiere-pro** (16): `premiere_health`, `premiere_ping`, `get_project_info`,
 `list_sequences`, `get_sequence_clips`, `get_audio_clips` (incl. media file paths),
 `list_project_items`, `import_files`, `create_sequence`, `place_clip` (slice via
 in/out + place at exact time — the beat-edit primitive), `remove_clips`,
 `add_markers` (batched, colored), `list_available_transitions`,
-`apply_transition_to_all_cuts`, `apply_transition_to_clip`.
+`apply_transition_to_all_cuts`, `apply_transition_to_clip`, `set_clip_param`
+(fixed numeric transform/effect value on a placed clip — e.g. Scale for beat
+punch-ins; also Rotation, Opacity).
 
 **media-analysis** (7): `analysis_health`, `detect_beats` (beats + downbeats + BPM,
 any media format), `find_best_moments` (ranked most-interesting windows per clip —

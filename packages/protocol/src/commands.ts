@@ -17,6 +17,7 @@ export const COMMANDS = [
   "place_clip",
   "remove_clips",
   "create_sequence",
+  "set_clip_param",
 ] as const;
 
 export type CommandName = (typeof COMMANDS)[number];
@@ -302,4 +303,32 @@ export interface CreateSequenceParams {
 export interface CreateSequenceResult {
   sequenceName: string;
   sequenceId: string;
+}
+
+// ---------------------------------------------------------------------------
+// set_clip_param — fixed-value transform/effect params on a placed clip.
+// Verified surface (26.2.2): numeric params on AE.ADBE Motion (Scale, Rotation,
+// Opacity) settable via param.createKeyframe(value) -> createSetValueAction.
+// Used for beat punch-ins (alternating Scale per slot).
+// ---------------------------------------------------------------------------
+
+export interface SetClipParamParams {
+  sequenceId?: string;
+  videoTrackIndex: number;
+  /** 0-based clip index on the track (sorted by start time). */
+  clipIndex: number;
+  /** Component matchName, e.g. "AE.ADBE Motion". */
+  componentMatchName: string;
+  /** Param display name, e.g. "Scale", "Rotation", "Opacity". */
+  paramName: string;
+  /** New numeric value (e.g. Scale 108 = 108%). */
+  value: number;
+}
+
+export interface SetClipParamResult {
+  ok: boolean;
+  clipName: string;
+  componentMatchName: string;
+  paramName: string;
+  value: number;
 }

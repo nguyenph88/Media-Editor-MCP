@@ -71,11 +71,12 @@ For each slot i (chronological order, **strictly sequential calls** — never pa
 
 1. `add_markers` — one cyan marker per interior cut ("Bar N"), single batched call.
 2. `apply_transition_to_all_cuts` on V1 — 0.5s centered Cross Dissolve suits ~1.7s slots (1s is too mushy at 140+ BPM). Expect applied == cuts, skipped == 0.
-3. Title (optional): `render_text_png` → import → `place_clip` on V2 (videoTrackIndex 1) at 0–3s.
+3. **Punch-ins (optional, on by default — the trendy beat-pulse):** `set_clip_param` Scale on alternating clips so every cut has a visible size-jump. Default: odd-index slots → **109**, even slots left at 100; **slot 0 (the hook) stays 100** for a clean open. Zoom-IN only (>100) — it crops inward and never reveals black edges, so it's safe on every clip regardless of source resolution. One call per punched clip (clips are independent; safe to batch in parallel — Premiere serializes them). For a stronger drop feel, scale the punch with `detect_energy` (drop→112, build→106, calm→100) instead of flat alternation.
+4. Title (optional): `render_text_png` → import → `place_clip` on V2 (videoTrackIndex 1) at 0–3s.
    - Vietnamese/diacritic text: pass `font_path: C:\Windows\Fonts\arialbd.ttf` (the default font may lack the glyphs).
    - Save PNGs to an `MCP Overlays` folder next to the .prproj.
-4. Subtitles (optional): `transcribe` → `generate_srt` → tell the user to **drag the .srt into Premiere** (caption API is read-only — the one manual step).
+5. Subtitles (optional): `transcribe` → `generate_srt` → tell the user to **drag the .srt into Premiere** (caption API is read-only — the one manual step).
 
 ## Report
 
-Tell the user: sequence name, BPM, slot count, clips used, transition report (applied/skipped), and any clips rejected for having audio.
+Tell the user: sequence name, BPM, slot count, clips used, transition report (applied/skipped), punch-in pattern if applied, and any clips rejected for having audio.

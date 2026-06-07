@@ -17,6 +17,7 @@ import {
   type PlaceClipResult,
   type ProjectInfoResult,
   type RemoveClipsResult,
+  type SetClipParamResult,
 } from "@ppmcp/protocol";
 import { WsHost, BridgeError } from "../bridge/WsHost.js";
 import { config } from "../config.js";
@@ -441,6 +442,36 @@ export function registerTools(server: McpServer, bridge: WsHost): void {
     wrap(async (args) => {
       const r = await bridge.sendCommand<CreateSequenceResult>("create_sequence", args, config.bulkCommandTimeoutMs);
       return textResult(`Created sequence "${r.sequenceName}" (id: ${r.sequenceId}).`, r);
+    }),
+  );
+
+  // -------------------------------------------------------------------------
+  // Per-clip transform (beat punch-ins, etc.)
+  // -------------------------------------------------------------------------
+  server.registerTool(
+    "set_clip_param",
+    {
+      title: "Set a clip transform/effect param",
+      description:
+        "Set a fixed numeric value on a placed clip's component param — e.g. " +
+        'componentMatchName "AE.ADBE Motion", paramName "Scale", value 108 for a ' +
+        "108% punch-in zoom. Also works for Rotation, Opacity. Used to add beat " +
+        "punch-ins (alternate Scale per clip so each cut hits visually).",
+      inputSchema: {
+        sequenceId: z.string().optional().describe("Sequence id; defaults to the active sequence"),
+        videoTrackIndex: z.number().int().min(0).describe("V1 = 0"),
+        clipIndex: z.number().int().min(0).describe("0-based clip index on the track (by start time)"),
+        componentMatchName: z
+          .string()
+          .default("AE.ADBE Motion")
+          .describe('Component matchName (default "AE.ADBE Motion")'),
+        paramName: z.string().describe('Param display name, e.g. "Scale", "Rotation", "Opacity"'),
+        value: z.number().describe("New numeric value (Scale 108 = 108%)"),
+      },
+    },
+    wrap(async (args) => {
+      const r = await bridge.sendCommand<SetClipParamResult>("set_clip_param", args);
+      return textResult(`Set ${r.componentMatchName}/${r.paramName} = ${r.value} on "${r.clipName}".`, r);
     }),
   );
 
