@@ -99,14 +99,15 @@ in/out + place at exact time — the beat-edit primitive), `remove_clips`,
 `add_markers` (batched, colored), `list_available_transitions`,
 `apply_transition_to_all_cuts`, `apply_transition_to_clip`.
 
-**media-analysis** (5): `analysis_health`, `detect_beats` (beats + downbeats + BPM,
-any media format), `transcribe` (faster-whisper, word timestamps), `generate_srt`,
-`render_text_png` (text overlays).
+**media-analysis** (6): `analysis_health`, `detect_beats` (beats + downbeats + BPM,
+any media format), `find_best_moments` (ranked most-interesting windows per clip —
+motion/sharpness/exposure scoring, ffmpeg+numpy, ~1s per clip), `transcribe`
+(faster-whisper, word timestamps), `generate_srt`, `render_text_png` (text overlays).
 
 ## The beat-edit recipe (what /pp-create-reel does internally)
 
 1. `detect_beats` on the music → downbeat list; slot boundaries = `[0] + downbeats under target + [target]` (target 59s by default)
-2. Probe candidates (`packages/analysis-server/tests/probe_media.py` — duration/resolution/fps) and **reject any footage with an audio stream** — placed audio would land over the music and there is no audio-remove tool
+2. Probe candidates (`packages/analysis-server/tests/probe_media.py` — duration/resolution/fps) and **reject any footage with an audio stream** — placed audio would land over the music and there is no audio-remove tool; then `find_best_moments` on each survivor — slices come from its ranked windows, and the single best window across all clips opens the reel (the hook)
 3. `create_sequence` from a clip (settings match media; prefer a 60fps seed for cut precision), clear the seed clip
 4. Place music **sliced `in=0, out=target` in this one placement** (audio on A1 can never be shortened later), then `remove_clips` its video item — the linked audio stays on A1
 5. Per downbeat slot: `place_clip` with a varying source slice, **overshooting ~3 frames** — the next overwrite trims it frame-tight (this defeats mp4 start-offset quirks). Strictly chronological; last slot gets an exact out, no overshoot

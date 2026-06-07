@@ -34,6 +34,11 @@ uv run --directory <repo>\packages\analysis-server python tests/probe_media.py <
 - Keep one orientation (all-vertical or all-horizontal); mixed looks bad.
 - Need each clip's duration ≥ longest-slot + 0.3s headroom. ~12 clips for 35 slots is the sweet spot (≈3 appearances each).
 
+Then run **`find_best_moments`** on every accepted clip (window_seconds ≈ the
+slot length + 0.1, count 3, defaults otherwise; ~1s per clip). This returns
+ranked windows scored on motion/sharpness/exposure — these windows, not blind
+thirds, are where slices come from.
+
 ## Step 3 — Build the sequence
 
 1. `import_files` — music + all chosen clips (one batched call).
@@ -45,8 +50,9 @@ uv run --directory <repo>\packages\analysis-server python tests/probe_media.py <
 For each slot i (chronological order, **strictly sequential calls** — never parallel):
 
 - `at = boundary[i]`, `dur = boundary[i+1] - boundary[i]`
-- `in` varies per appearance of the clip (early / middle / late thirds of the source) so no slice repeats
-- `out = in + dur + 0.05` (**~3-frame overshoot** — the NEXT placement's overwrite trims it frame-tight; this defeats mp4 start-offset snapping)
+- `in` comes from the clip's `find_best_moments` windows: appearance k of a clip uses its k-th ranked window's `start` (fall back to early/middle/late thirds only if a clip has fewer windows than appearances). Never reuse a window.
+- **HOOK RULE: slot 1 gets the single highest-scoring window across ALL clips** — the first 1.5s decides whether viewers stay. Don't spend a clip's best window mid-reel if it can open the video.
+- `out = in + dur + 0.05` (**~3-frame overshoot** — the NEXT placement's overwrite trims it frame-tight; this defeats mp4 start-offset snapping). Clamp `out ≤ clip duration`; shift `in` down if needed.
 - **Last slot: NO overshoot** (`out = in + dur` exactly) — nothing after it to trim.
 - Clip order: rotate the roster in shuffled rounds, never the same clip in adjacent slots.
 

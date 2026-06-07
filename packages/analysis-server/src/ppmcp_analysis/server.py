@@ -69,6 +69,26 @@ def detect_beats(file_path: str, include_downbeats: bool = True) -> dict[str, An
 
 
 @mcp.tool()
+def find_best_moments(
+    file_path: str,
+    window_seconds: float = 2.0,
+    count: int = 3,
+    sample_fps: float = 4.0,
+) -> dict[str, Any]:
+    """Find the most visually interesting moments in a video clip.
+
+    Scores downsampled frames on motion (50%), sharpness (30%) and exposure
+    (20%), then returns up to `count` non-overlapping windows of
+    `window_seconds`, best first. Use the top window's start/end as the
+    place_clip slice for that clip — and put the single best moment across
+    all clips FIRST in a reel (the hook). Pure ffmpeg+numpy; ~1s per clip.
+    """
+    from .video import find_best_windows
+
+    return find_best_windows(file_path, window_seconds, count, sample_fps)
+
+
+@mcp.tool()
 def transcribe(
     file_path: str, model_size: str = "small", word_timestamps: bool = True
 ) -> dict[str, Any]:
