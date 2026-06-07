@@ -10,9 +10,6 @@ import {
   type GetAudioClipsResult,
   type GetSequenceClipsResult,
   type ImportFilesResult,
-  type InsertMogrtResult,
-  type GetMogrtParamsResult,
-  type SetMogrtParamResult,
   type ListAvailableTransitionsResult,
   type ListProjectItemsResult,
   type ListSequencesResult,
@@ -444,83 +441,6 @@ export function registerTools(server: McpServer, bridge: WsHost): void {
     wrap(async (args) => {
       const r = await bridge.sendCommand<CreateSequenceResult>("create_sequence", args, config.bulkCommandTimeoutMs);
       return textResult(`Created sequence "${r.sequenceName}" (id: ${r.sequenceId}).`, r);
-    }),
-  );
-
-  // -------------------------------------------------------------------------
-  // MOGRT tools — prototype (insert verified surface; param write under discovery)
-  // -------------------------------------------------------------------------
-  server.registerTool(
-    "insert_mogrt",
-    {
-      title: "Insert a Motion Graphics Template",
-      description:
-        "Insert a .mogrt (Motion Graphics Template / Essential Graphics) file onto the timeline " +
-        "at an exact time and track. Use get_mogrt_params afterwards to list its adjustable " +
-        "parameters (text, colors, sizes) and set_mogrt_param to change them.",
-      inputSchema: {
-        sequenceId: z.string().optional().describe("Sequence id; defaults to the active sequence"),
-        mogrtPath: z.string().describe("Absolute path to a .mogrt file"),
-        atSeconds: z.number().min(0).describe("Timeline position for the graphic's start"),
-        videoTrackIndex: z.number().int().min(0).describe("V1 = 0; higher = overlay tracks"),
-        audioTrackIndex: z.number().int().min(0).optional().describe("Defaults to videoTrackIndex"),
-      },
-    },
-    wrap(async (args) => {
-      const r = await bridge.sendCommand<InsertMogrtResult>("insert_mogrt", args, config.bulkCommandTimeoutMs);
-      return textResult(
-        `Inserted "${r.mogrtName}" at ${r.insertedAtSeconds}s on V${r.videoTrackIndex + 1} (via ${r.methodUsed}).`,
-        r,
-      );
-    }),
-  );
-
-  server.registerTool(
-    "get_mogrt_params",
-    {
-      title: "List a MOGRT clip's parameters",
-      description:
-        "List the adjustable parameters (text, colors, sliders) of a Motion Graphics Template " +
-        "clip on the timeline, with component/param indexes for set_mogrt_param. Also returns " +
-        "discovery notes describing any API surface the prototype could not interpret.",
-      inputSchema: {
-        sequenceId: z.string().optional().describe("Sequence id; defaults to the active sequence"),
-        videoTrackIndex: z.number().int().min(0).describe("V1 = 0"),
-        clipIndex: z.number().int().min(0).describe("0-based clip index on the track (by start time)"),
-      },
-    },
-    wrap(async (args) => {
-      const r = await bridge.sendCommand<GetMogrtParamsResult>("get_mogrt_params", args);
-      const lines = r.params.map(
-        (p) =>
-          `[c${p.componentIndex}/p${p.paramIndex}] ${p.displayName} (${p.componentMatchName}) = ${JSON.stringify(p.value)} <${p.valueType}>`,
-      );
-      const notes = r.discoveryNotes.length ? `\nDiscovery notes:\n${r.discoveryNotes.join("\n")}` : "";
-      return textResult(`"${r.clipName}" — ${r.params.length} param(s):\n${lines.join("\n")}${notes}`, r);
-    }),
-  );
-
-  server.registerTool(
-    "set_mogrt_param",
-    {
-      title: "Set a MOGRT clip parameter",
-      description:
-        "Change one parameter of a Motion Graphics Template clip on the timeline (e.g. its text " +
-        "or color). Use the componentIndex/paramIndex pairs from get_mogrt_params.",
-      inputSchema: {
-        sequenceId: z.string().optional().describe("Sequence id; defaults to the active sequence"),
-        videoTrackIndex: z.number().int().min(0).describe("V1 = 0"),
-        clipIndex: z.number().int().min(0).describe("0-based clip index on the track (by start time)"),
-        componentIndex: z.number().int().min(0).describe("From get_mogrt_params"),
-        paramIndex: z.number().int().min(0).describe("From get_mogrt_params"),
-        value: z
-          .union([z.string(), z.number(), z.boolean(), z.array(z.number())])
-          .describe("New value: string for text, number, boolean, or [r,g,b,a] 0-1 floats for color"),
-      },
-    },
-    wrap(async (args) => {
-      const r = await bridge.sendCommand<SetMogrtParamResult>("set_mogrt_param", args);
-      return textResult(`Set "${r.displayName}" (via ${r.methodUsed}).`, r);
     }),
   );
 

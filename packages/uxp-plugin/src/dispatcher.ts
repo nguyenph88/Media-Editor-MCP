@@ -22,7 +22,6 @@ import {
   removeClips,
   createSequence,
 } from "./handlers/edit.js";
-import { insertMogrt, getMogrtParams, setMogrtParam } from "./handlers/mogrt.js";
 
 type Handler = (params: never) => Promise<unknown>;
 
@@ -41,9 +40,6 @@ const handlers: Record<string, Handler> = {
   place_clip: placeClip,
   remove_clips: removeClips,
   create_sequence: createSequence,
-  insert_mogrt: insertMogrt,
-  get_mogrt_params: getMogrtParams,
-  set_mogrt_param: setMogrtParam,
 };
 
 export async function dispatch(
