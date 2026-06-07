@@ -201,6 +201,32 @@ function safeGet<T>(fn: () => T): T | null {
 // grade_track — ensure one effect per clip + set params, sequentially
 // ---------------------------------------------------------------------------
 
+/**
+ * Create a video filter component, tolerant of arg-shape quirks. A bare-string
+ * createComponent throws "Illegal Parameter type" on some builds, so try
+ * several forms (same fallback add_clip_effect uses). Returns the component.
+ */
+function createFilterComponent(factory: any, matchName: string): any {
+  const attempts: Array<() => any> = [
+    () => factory.createComponent(matchName),
+    () => factory.createComponent(matchName, true),
+    () =>
+      typeof factory.createComponentByDisplayName === "function"
+        ? factory.createComponentByDisplayName(matchName)
+        : undefined,
+  ];
+  const errors: string[] = [];
+  for (const attempt of attempts) {
+    try {
+      const c = attempt();
+      if (c) return c;
+    } catch (e) {
+      errors.push(e instanceof Error ? e.message : String(e));
+    }
+  }
+  throw new Error(`createComponent failed: ${errors.join(" | ")}`);
+}
+
 async function listChainComponents(chain: any): Promise<any[]> {
   const count = await chain.getComponentCount();
   const out: any[] = [];
@@ -251,10 +277,11 @@ export async function gradeTrack(params: GradeTrackParams): Promise<GradeTrackRe
 
       // 3. Add the effect if absent.
       if (matchIdxs.length === 0) {
+        // Create OUTSIDE the lock — createComponent rejects its args when
+        // called inside lockedAccess (verified: add_clip_effect creates first,
+        // locks only for the append).
+        const component = createFilterComponent(factory, matchName);
         await withLockedAccess(project, () => {
-          const component =
-            factory.createComponent?.(matchName) ?? factory.createComponent(matchName, true);
-          if (!component) throw new Error(`createComponent("${matchName}") returned null`);
           project.executeTransaction((compound: any) => {
             compound.addAction(chain.createAppendComponentAction(component));
           }, `MCP: add ${matchName} on clip ${idx}`);
