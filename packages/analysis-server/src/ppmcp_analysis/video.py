@@ -207,6 +207,8 @@ def find_best_windows(
     if len(frames) < 2:
         return {
             "durationSeconds": round(duration, 2),
+            "activityMotion": 0.0,
+            "activitySharpness": 0.0,
             "windows": [{"start": 0.0, "end": round(duration, 2), "score": 0.0,
                          "motion": 0.0, "sharpness": 0.0, "exposure": 0.0, "faces": 0.0}],
             "note": "clip too short to score; whole clip returned",
@@ -263,5 +265,10 @@ def find_best_windows(
     )
     return {
         "durationSeconds": round(duration, 2),
+        # ABSOLUTE (un-normalized) whole-clip means — comparable ACROSS clips,
+        # so callers can rank "how dynamic/sharp is this footage" (e.g. to decide
+        # beat-spans). The per-window motion/sharpness above are clip-relative.
+        "activityMotion": round(float(s.motion.mean()), 3),
+        "activitySharpness": round(float(s.sharpness.mean()), 2),
         "windows": [window_entry(i) for i in picked],
     }

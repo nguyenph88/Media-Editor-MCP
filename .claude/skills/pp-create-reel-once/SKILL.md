@@ -27,7 +27,11 @@ Same as [[pp-create-reel]] Step 2: `premiere_health` + `analysis_health` green; 
 ## Step 3 — Assign a beat-span to each clip
 Per clip, decide `span ∈ {1,2,3}` = how many consecutive downbeat-intervals it occupies:
 - **fixed** (`beatsPerClip=1|2|3`): every clip gets that span.
-- **auto** (default): scale by how much good content the clip has. Rule of thumb: `span = clamp(round(clipDuration / (2 × bar)), 1, 3)`, but never exceed what the clip can fill (need `clipDuration ≥ span×bar + 0.3` headroom). So a 2s stock clip → 1 beat; a 6-8s cinematic shot → 2-3 beats.
+- **manual** (`beatsPerClip=[3,1,2,…]`): one span per clip, in order.
+- **auto** (default): span by how DYNAMIC the footage actually is — not raw length (a long static shot should NOT hog 3 beats). `find_best_moments` returns absolute, cross-clip-comparable `activityMotion` and `activitySharpness` (whole-clip means, before per-clip normalization). Across the clips in THIS reel:
+  1. Min-max normalize `activityMotion` and `activitySharpness` over the clip set; `activity = 0.7·motionN + 0.3·sharpN`.
+  2. Tier the span: `activity ≥ 0.66 → 3`, `≥ 0.33 → 2`, else `1`. (With few clips, ranking into thirds works too.)
+  3. **Cap by what the clip can fill**: shrink span while `clipDuration < span×bar + 0.3`. A short clip can't span 3 even if lively; a long boring clip stays at 1.
 - A clip's slot duration = `D[k+span] − D[k]` (sum of its bars). Get its slice from `find_best_moments(clip, window_seconds = slotDur + 0.1, count=1)` → top window `start`. (In chronological mode this still picks the BEST window *within* the clip — order refers to clip sequence, not within-clip.)
 
 ## Step 4 — Build
