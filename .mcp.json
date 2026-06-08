@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "capcut": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "--directory", "D:/Workspace/Capcut-MCP", "capcut-mcp"],
+      "env": { "PYTHONUTF8": "1" }
+    }
+  }
+}

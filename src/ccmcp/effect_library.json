@@ -1,0 +1,1281 @@
+{
+  "generated_at": "2026-06-08 10:43:35",
+  "catalog_counts": {
+    "filter": 454,
+    "video_effect": 1583,
+    "character_effect": 254,
+    "transition": 1137,
+    "intro": 251,
+    "outro": 219,
+    "group_anim": 108,
+    "audio_effect": 213,
+    "text_intro": 182,
+    "text_outro": 100,
+    "text_loop": 81,
+    "_cached_total": 19
+  },
+  "cached_resource_count": 19,
+  "user_used_count": 126,
+  "user_used": [
+    {
+      "name": "",
+      "effect_id": "7501974767453474064",
+      "resource_id": "7501974767453474064",
+      "kind": "filter/adjust",
+      "type": "brightness",
+      "cached": true,
+      "use_count": 64,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Bubble Blur",
+      "effect_id": "7159450506648097281",
+      "resource_id": "7159450506648097281",
+      "kind": "transition",
+      "type": "transition",
+      "cached": true,
+      "use_count": 29,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "DeepGlow",
+      "effect_id": "7367637998579487248",
+      "resource_id": "7367637998579487248",
+      "kind": "filter/adjust",
+      "type": "bloom",
+      "cached": true,
+      "use_count": 15,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Square Blur 2",
+      "effect_id": "7384056244421530113",
+      "resource_id": "7384056244421530113",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 12,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "ART Artistic EN - Black White",
+      "effect_id": "7572067711346363701",
+      "resource_id": "7572067711346363701",
+      "kind": "filter/adjust",
+      "type": "text_effect",
+      "cached": false,
+      "use_count": 10,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Slim",
+      "effect_id": "",
+      "resource_id": "7408429681466297606",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": true,
+      "use_count": 9,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Simple Blur",
+      "effect_id": "7524932829382200637",
+      "resource_id": "7524932829382200637",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 9,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Width",
+      "effect_id": "",
+      "resource_id": "7406276078773308678",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": false,
+      "use_count": 8,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Mix",
+      "effect_id": "6724845717472416269",
+      "resource_id": "6724845717472416269",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 7,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Jaw",
+      "effect_id": "",
+      "resource_id": "7408430746836208901",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": false,
+      "use_count": 6,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Cheeckbones",
+      "effect_id": "",
+      "resource_id": "7408430163215666438",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": false,
+      "use_count": 6,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Small Face",
+      "effect_id": "",
+      "resource_id": "7406275643517848838",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": true,
+      "use_count": 6,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "ART Paper EN - Black And White Paper",
+      "effect_id": "7566231670341438725",
+      "resource_id": "7566231670341438725",
+      "kind": "filter/adjust",
+      "type": "text_effect",
+      "cached": false,
+      "use_count": 6,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "B&W Film",
+      "effect_id": "7399464367420493062",
+      "resource_id": "7399464367420493062",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 6,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Invert Blinks",
+      "effect_id": "7510232010292563261",
+      "resource_id": "7510232010292563261",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 5,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "V shape",
+      "effect_id": "",
+      "resource_id": "7406276308130483461",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": false,
+      "use_count": 5,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Shorten",
+      "effect_id": "",
+      "resource_id": "7406275083292970245",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": false,
+      "use_count": 5,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "makeup-root",
+      "effect_id": "",
+      "resource_id": "7406275420099824901",
+      "kind": "filter/adjust",
+      "type": "makeup_root",
+      "cached": true,
+      "use_count": 5,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Insta Nostalgia",
+      "effect_id": "7405899632129085953",
+      "resource_id": "7405899632129085953",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": true,
+      "use_count": 5,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Leak 2",
+      "effect_id": "7399466219721608453",
+      "resource_id": "7399466219721608453",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": true,
+      "use_count": 5,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Halo Blur",
+      "effect_id": "7399467609609080069",
+      "resource_id": "7399467609609080069",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": true,
+      "use_count": 5,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Size",
+      "effect_id": "",
+      "resource_id": "7408429911431597318",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": true,
+      "use_count": 4,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Leak 1",
+      "effect_id": "7399472317929245957",
+      "resource_id": "7399472317929245957",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 4,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Heat Flash",
+      "effect_id": "7471459042611744053",
+      "resource_id": "7471459042611744053",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 4,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Elegant B&W",
+      "effect_id": "7394399556227568129",
+      "resource_id": "7394399556227568129",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 4,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Retro Film",
+      "effect_id": "7399471002620611846",
+      "resource_id": "7399471002620611846",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 4,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Camera Beats",
+      "effect_id": "7399471617497206022",
+      "resource_id": "7399471617497206022",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 3,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Illusive Twist",
+      "effect_id": "7519366620800617729",
+      "resource_id": "7519366620800617729",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 3,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Floral Mirror",
+      "effect_id": "7395467565335645445",
+      "resource_id": "7395467565335645445",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 3,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Tremble & Shrink",
+      "effect_id": "7524051031626501392",
+      "resource_id": "7524051031626501392",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 3,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Bright Eye",
+      "effect_id": "",
+      "resource_id": "7408429836730977542",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": true,
+      "use_count": 3,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Shape",
+      "effect_id": "",
+      "resource_id": "7406275346934320389",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": false,
+      "use_count": 3,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Inner",
+      "effect_id": "",
+      "resource_id": "7406276674569964806",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": false,
+      "use_count": 3,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Chin Length",
+      "effect_id": "",
+      "resource_id": "7408393763250277638",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": false,
+      "use_count": 3,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Natural",
+      "effect_id": "",
+      "resource_id": "7406275228231290118",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": true,
+      "use_count": 3,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Middle",
+      "effect_id": "",
+      "resource_id": "7406275891141086470",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": false,
+      "use_count": 3,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Hairline",
+      "effect_id": "",
+      "resource_id": "7406275486378134789",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": false,
+      "use_count": 3,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Lower",
+      "effect_id": "",
+      "resource_id": "7406275727684848902",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": true,
+      "use_count": 3,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Subject Focus",
+      "effect_id": "7622699202908409095",
+      "resource_id": "7622699202908409095",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": true,
+      "use_count": 3,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Film Erase",
+      "effect_id": "7303835940022129153",
+      "resource_id": "7303835940022129153",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 3,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Comparison",
+      "effect_id": "7205856409794122242",
+      "resource_id": "7205856409794122242",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 3,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Film",
+      "effect_id": "6706773528319906308",
+      "resource_id": "6706773528319906308",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 2,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "BW1",
+      "effect_id": "7130119287515124225",
+      "resource_id": "7130119287515124225",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 2,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Flash CCD",
+      "effect_id": "7434502159204356609",
+      "resource_id": "7434502159204356609",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 2,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Black Flash 2",
+      "effect_id": "7267836273539158530",
+      "resource_id": "7267836273539158530",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 2,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Slant",
+      "effect_id": "",
+      "resource_id": "7406274994864442629",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": true,
+      "use_count": 2,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Flat",
+      "effect_id": "",
+      "resource_id": "7406275607484550405",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": false,
+      "use_count": 2,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Upper",
+      "effect_id": "",
+      "resource_id": "7406276519720422661",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": false,
+      "use_count": 2,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Close-up Highlight",
+      "effect_id": "7516424014307331389",
+      "resource_id": "7516424014307331389",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 2,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Technicolor Flash",
+      "effect_id": "7478938599086476597",
+      "resource_id": "7478938599086476597",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 2,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Flashing Shards",
+      "effect_id": "7524592976048295184",
+      "resource_id": "7524592976048295184",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": true,
+      "use_count": 2,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Chromatic",
+      "effect_id": "7399467920155315462",
+      "resource_id": "7399467920155315462",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": true,
+      "use_count": 2,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Quick Dazzle",
+      "effect_id": "7564624735657659665",
+      "resource_id": "7564624735657659665",
+      "kind": "transition",
+      "type": "transition",
+      "cached": true,
+      "use_count": 2,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Snap Back",
+      "effect_id": "7535363151127153936",
+      "resource_id": "7535363151127153936",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 2,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Pull In II",
+      "effect_id": "7291211157254181377",
+      "resource_id": "7291211157254181377",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 2,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Snowfall",
+      "effect_id": "7399471702746336517",
+      "resource_id": "7399471702746336517",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 2,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Brown",
+      "effect_id": "6706773528319889924",
+      "resource_id": "6706773528319889924",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 2,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Antique Film",
+      "effect_id": "7624034504516160786",
+      "resource_id": "7624034504516160786",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 2,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Old Footage",
+      "effect_id": "7395468919198321926",
+      "resource_id": "7395468919198321926",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 2,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Nostalgic Zoom",
+      "effect_id": "7576308377148591365",
+      "resource_id": "7576308377148591365",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": true,
+      "use_count": 2,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Hollywood Past",
+      "effect_id": "7540934133946617149",
+      "resource_id": "7540934133946617149",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": true,
+      "use_count": 2,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Nostalgic Light",
+      "effect_id": "7399471416497736966",
+      "resource_id": "7399471416497736966",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": true,
+      "use_count": 2,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Wobble",
+      "effect_id": "7399467327726587141",
+      "resource_id": "7399467327726587141",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Solar Quake",
+      "effect_id": "7414191072433147142",
+      "resource_id": "7414191072433147142",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Alt. B&W",
+      "effect_id": "7399466631983893766",
+      "resource_id": "7399466631983893766",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Motion Focus",
+      "effect_id": "7511592872546716944",
+      "resource_id": "7511592872546716944",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Negative Split",
+      "effect_id": "7399466860137237765",
+      "resource_id": "7399466860137237765",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Somber Eye",
+      "effect_id": "7561037957684022589",
+      "resource_id": "7561037957684022589",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Firefly Cities",
+      "effect_id": "7563985132642749749",
+      "resource_id": "7563985132642749749",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Multi-screen Pop",
+      "effect_id": "7395467370757721349",
+      "resource_id": "7395467370757721349",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Handheld Camera",
+      "effect_id": "7506549736204209461",
+      "resource_id": "7506549736204209461",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Dark Shake",
+      "effect_id": "7508897852182056193",
+      "resource_id": "7508897852182056193",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Camera Shake",
+      "effect_id": "7507110964391709968",
+      "resource_id": "7507110964391709968",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Slide Bars",
+      "effect_id": "7460753045761053185",
+      "resource_id": "7460753045761053185",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Augmentation",
+      "effect_id": "",
+      "resource_id": "7408393706023243013",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": true,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Expression",
+      "effect_id": "",
+      "resource_id": "7406275869406252293",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": true,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "White teeth",
+      "effect_id": "",
+      "resource_id": "7408409685415578885",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": true,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Smile",
+      "effect_id": "",
+      "resource_id": "7406275500630396166",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Tilt",
+      "effect_id": "",
+      "resource_id": "7406275400617266437",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Position",
+      "effect_id": "",
+      "resource_id": "7406274855613615366",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "1980",
+      "effect_id": "6735689609675543054",
+      "resource_id": "6735689609675543054",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": true,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Noise 1",
+      "effect_id": "7399470295117073670",
+      "resource_id": "7399470295117073670",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": true,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Recoloring Ripple",
+      "effect_id": "7538933029897538869",
+      "resource_id": "7538933029897538869",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": true,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Flash Segments",
+      "effect_id": "7627869520350219527",
+      "resource_id": "7627869520350219527",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": true,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Fragmented Flashback",
+      "effect_id": "7611439167905549585",
+      "resource_id": "7611439167905549585",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": true,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Into Stardust",
+      "effect_id": "7537207777316326673",
+      "resource_id": "7537207777316326673",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": true,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Reel Burn",
+      "effect_id": "7563294314475080965",
+      "resource_id": "7563294314475080965",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": true,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Casablanca",
+      "effect_id": "7224040604806681089",
+      "resource_id": "7224040604806681089",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Metal",
+      "effect_id": "7083809725615198722",
+      "resource_id": "7083809725615198722",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Dissolve II",
+      "effect_id": "6724866927933526542",
+      "resource_id": "6724866927933526542",
+      "kind": "transition",
+      "type": "transition",
+      "cached": true,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Gradual Dissolve",
+      "effect_id": "7567289154564918533",
+      "resource_id": "7567289154564918533",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Retro I",
+      "effect_id": "7202170603686597121",
+      "resource_id": "7202170603686597121",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Pentagonal Dazzles",
+      "effect_id": "7491138615477685505",
+      "resource_id": "7491138615477685505",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Noise 2",
+      "effect_id": "7399469641170554117",
+      "resource_id": "7399469641170554117",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Bright Noise",
+      "effect_id": "7595511388433321269",
+      "resource_id": "7595511388433321269",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Shake & Flash",
+      "effect_id": "7504478382281837841",
+      "resource_id": "7504478382281837841",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Overlap Fade",
+      "effect_id": "7521649607093374269",
+      "resource_id": "7521649607093374269",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Shadow Sweep",
+      "effect_id": "7534622590535503165",
+      "resource_id": "7534622590535503165",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Overlay Distort",
+      "effect_id": "7441466472955646465",
+      "resource_id": "7441466472955646465",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Heavenly Flash",
+      "effect_id": "7503180005757832509",
+      "resource_id": "7503180005757832509",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Slide Down",
+      "effect_id": "7309454269982183938",
+      "resource_id": "7309454269982183938",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Overlay",
+      "effect_id": "871340",
+      "resource_id": "6758324989931295240",
+      "kind": "filter/adjust",
+      "type": "mix_mode",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Vivid Verse",
+      "effect_id": "7546418610974117137",
+      "resource_id": "7546418610974117137",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Off-color Burst",
+      "effect_id": "7535363045460167937",
+      "resource_id": "7535363045460167937",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Pull Out",
+      "effect_id": "6724226338418332167",
+      "resource_id": "6724226338418332167",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Superimpose",
+      "effect_id": "6917578154089386498",
+      "resource_id": "6917578154089386498",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Summer Tale",
+      "effect_id": "7400647790373638657",
+      "resource_id": "7400647790373638657",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Blur",
+      "effect_id": "7309061242323210753",
+      "resource_id": "7309061242323210753",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "HD Sunlight",
+      "effect_id": "7431520244448891409",
+      "resource_id": "7431520244448891409",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Blurry Circles",
+      "effect_id": "7582535691851091207",
+      "resource_id": "7582535691851091207",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Dreamy Bubbles",
+      "effect_id": "7330894968266953217",
+      "resource_id": "7330894968266953217",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Golden Nightglow",
+      "effect_id": "7539884764216560949",
+      "resource_id": "7539884764216560949",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Lens Blur",
+      "effect_id": "7184693832758333954",
+      "resource_id": "7184693832758333954",
+      "kind": "transition",
+      "type": "transition",
+      "cached": true,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Insta Nostalgia",
+      "effect_id": "7476418490694373905",
+      "resource_id": "7476418490694373905",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "TV Flash",
+      "effect_id": "7570578602446703880",
+      "resource_id": "7570578602446703880",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Square Blur",
+      "effect_id": "7140916993317671425",
+      "resource_id": "7140916993317671425",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Glitch Blur",
+      "effect_id": "7302271133825372673",
+      "resource_id": "7302271133825372673",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Soft Light",
+      "effect_id": "7445184125465530881",
+      "resource_id": "7445184125465530881",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": true,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Bokeh",
+      "effect_id": "7442221880838197777",
+      "resource_id": "7442221880838197777",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": true,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Gray",
+      "effect_id": "7187676220962640386",
+      "resource_id": "7187676220962640386",
+      "kind": "filter/adjust",
+      "type": "filter",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "B&W Grain",
+      "effect_id": "7530172179627937025",
+      "resource_id": "7530172179627937025",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Roman",
+      "effect_id": "",
+      "resource_id": "7406274923083074822",
+      "kind": "filter/adjust",
+      "type": "figure",
+      "cached": true,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "会话101",
+      "effect_id": "7446995746898955526",
+      "resource_id": "7446995746898955526",
+      "kind": "filter/adjust",
+      "type": "text_shape",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": false
+    },
+    {
+      "name": "Vignette",
+      "effect_id": "7399463239379209477",
+      "resource_id": "7399463239379209477",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Blur",
+      "effect_id": "7399464929830423813",
+      "resource_id": "7399464929830423813",
+      "kind": "video_effect",
+      "type": "video_effect",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    },
+    {
+      "name": "Then and Now",
+      "effect_id": "7012818976015127041",
+      "resource_id": "7012818976015127041",
+      "kind": "transition",
+      "type": "transition",
+      "cached": false,
+      "use_count": 1,
+      "in_pycapcut_catalog": true
+    }
+  ]
+}
