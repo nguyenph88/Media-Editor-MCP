@@ -11,7 +11,10 @@ The plan is plain dataclasses (JSON-friendly) so it can be inspected and, later,
 
 from __future__ import annotations
 
+import json
+import uuid
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Dict, List, Optional
 
 import pycapcut as cc
@@ -72,6 +75,7 @@ class AudioSpec:
     source_start_us: int = 0
     volume: float = 1.0
     track: Optional[str] = None
+    beats_us: List[int] = field(default_factory=list)  # timeline beat marks (microseconds)
 
 
 @dataclass
@@ -216,9 +220,52 @@ def materialize(session: DraftSession) -> cc.ScriptFile:
     return script
 
 
+# ---- beat markers --------------------------------------------------------------------
+# pyCapCut leaves materials.beats empty and exposes no API for it, so we inject the beats
+# material directly into the saved JSON. Schema reverse-engineered + confirmed in CapCut 8.x:
+# one beats material per audio segment, its id appended to that segment's extra_material_refs;
+# user_beats are timeline positions in MICROSECONDS.
+
+def _beats_material(bid: str, beats_us: List[int]) -> dict:
+    return {
+        "type": "beats", "id": bid,
+        "mode": 404, "gear": 404, "gear_count": 0,
+        "enable_ai_beats": False,
+        "ai_beats": {
+            "beat_speed_infos": [], "beats_path": "", "beats_url": "",
+            "melody_path": "", "melody_percents": [], "melody_url": "",
+        },
+        "user_beats": [int(x) for x in beats_us],
+        "user_delete_ai_beats": [],
+    }
+
+
+def _inject_beats(content_path: str, audios: List[AudioSpec]) -> int:
+    """Post-process the saved draft: attach a beats material to each audio segment that has
+    beat marks. Audio-track segments are in the same order as session.audios. Returns count."""
+    p = Path(content_path)
+    d = json.loads(p.read_text(encoding="utf-8"))
+    audio_segs = [seg for tr in d.get("tracks", []) if tr.get("type") == "audio"
+                  for seg in tr.get("segments", [])]
+    beats_arr = d.setdefault("materials", {}).setdefault("beats", [])
+    marked = 0
+    for spec, seg in zip(audios, audio_segs):
+        if not spec.beats_us:
+            continue
+        bid = str(uuid.uuid4()).upper()
+        beats_arr.append(_beats_material(bid, spec.beats_us))
+        seg.setdefault("extra_material_refs", []).append(bid)
+        marked += 1
+    if marked:
+        p.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+    return marked
+
+
 def save(session: DraftSession) -> dict:
     script = materialize(session)
     report = draft.save_draft(script, session.name)
+    if any(a.beats_us for a in session.audios):
+        report["beats_marked"] = _inject_beats(report["saved"], session.audios)
     session.created = True
     report["summary"] = session.summary()
     return report

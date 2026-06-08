@@ -114,16 +114,19 @@ def place_clip(path: str, start: float, duration: float, source_start: float = 0
 
 @mcp.tool()
 def add_audio(path: str, start: float, duration: float, source_start: float = 0.0,
-              volume: float = 1.0) -> dict[str, Any]:
+              volume: float = 1.0, beats: list[float] | None = None) -> dict[str, Any]:
     """Add an audio clip (e.g. the music track) to the audio track of the active draft.
 
-    Times in SECONDS. source_start trims into the source (e.g. skip an intro). Returns
-    the audio index.
+    Times in SECONDS. source_start trims into the source (e.g. skip an intro).
+    beats (optional): timeline positions in SECONDS to mark as beat markers on the clip
+    (the dots CapCut's "Beats" feature draws) — pass detect_beats output so the draft opens
+    with beats already marked. Returns the audio index.
     """
     s = session.active()
     s.audios.append(session.AudioSpec(
         path=path, start_us=_us(start), duration_us=_us(duration),
         source_start_us=_us(source_start), volume=volume,
+        beats_us=[_us(b) for b in (beats or [])],
     ))
     return {"audioIndex": len(s.audios) - 1, "audios": len(s.audios)}
 
