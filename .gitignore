@@ -6,3 +6,7 @@ tests/assets/
 dist/
 build/
 .uv/
+
+# Local MCP config holds API keys (Pexels/Pixabay) — keep it out of git.
+# Share the sanitized template instead: .mcp.json.example
+.mcp.json
