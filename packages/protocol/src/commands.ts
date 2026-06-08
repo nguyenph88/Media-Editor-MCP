@@ -233,6 +233,15 @@ export interface GetAudioClipsParams {
 export interface AudioClipInfo extends ClipInfo {
   /** Absolute path of the source media file (for external analysis). */
   mediaPath: string | null;
+  /**
+   * Source in-point in seconds (0 = start of the source media). Non-zero when
+   * the clip was trimmed at the head. Map a source beat `b` to the timeline as
+   * `startSeconds + (b - inSeconds)`, keeping only beats where inSeconds <= b <= outSeconds.
+   * null if the running plugin build predates this field.
+   */
+  inSeconds: number | null;
+  /** Source out-point in seconds (end of the used region within the source). */
+  outSeconds: number | null;
 }
 
 export interface GetAudioClipsResult {

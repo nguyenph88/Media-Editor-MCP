@@ -16,10 +16,11 @@ Detect beats of the music on A1 and drop a marker at each one on the timeline ru
    - No clips on A1 → tell the user and stop.
    - Multiple clips on A1 → process each one (detect on its own media file, offset per clip).
 3. `detect_beats` on each clip's `mediaPath` → `beats` + `downbeats` (in SOURCE time).
-4. Map source beat times → timeline:
-   - `timelineTime = clip.startSeconds + beatTime` (assumes the clip uses its source from 0 — the normal case for music dropped/placed onto A1).
-   - Keep only beats where `timelineTime < clip.endSeconds`.
-   - **Known limitation:** `get_audio_clips` does not expose the clip's source in-point. If the audio clip was sliced to start mid-song (in > 0), markers will be shifted — warn the user if marker positions look wrong; the fix is exposing `inSeconds` in the handler (not done yet).
+4. Map source beat times → timeline, using the clip's source trim points:
+   - `get_audio_clips` returns `inSeconds`/`outSeconds` (the clip's source in/out points). A clip trimmed at the head has `inSeconds > 0`.
+   - `timelineTime = clip.startSeconds + (beatTime - clip.inSeconds)`.
+   - Keep only beats inside the used region: `clip.inSeconds <= beatTime <= clip.outSeconds`.
+   - If `inSeconds`/`outSeconds` come back `null` (a plugin build predating this field), fall back to `timelineTime = clip.startSeconds + beatTime` and warn that head-trimmed clips will be shifted.
 5. `add_markers`, **chunked at 500 markers per call** (the tool's max):
    - FIRST call: `clearExisting: true` — this is the re-run story: every sequence marker is wiped and re-added, so calling /pp-mark-beats twice never duplicates.
    - Subsequent chunks: `clearExisting: false`.

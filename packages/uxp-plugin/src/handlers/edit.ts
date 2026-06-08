@@ -68,6 +68,22 @@ export async function getAudioClips(params: GetAudioClipsParams): Promise<GetAud
       const item = items[i];
       const start = (await item.getStartTime()).seconds as number;
       const end = (await item.getEndTime()).seconds as number;
+      // Source-relative trim points: lets callers map source-time analysis
+      // (e.g. detected beats) onto the timeline when the head was trimmed.
+      // Guarded so older API surfaces / odd item types degrade to null.
+      let inSeconds: number | null = null;
+      let outSeconds: number | null = null;
+      try {
+        if (typeof item.getInPoint === "function") {
+          inSeconds = (await item.getInPoint()).seconds as number;
+        }
+        if (typeof item.getOutPoint === "function") {
+          outSeconds = (await item.getOutPoint()).seconds as number;
+        }
+      } catch {
+        inSeconds = null;
+        outSeconds = null;
+      }
       clips.push({
         index: i,
         name: await clipName(item),
@@ -77,6 +93,8 @@ export async function getAudioClips(params: GetAudioClipsParams): Promise<GetAud
         startTimecode: secondsToTimecode(start, timebase.fps),
         endTimecode: secondsToTimecode(end, timebase.fps),
         mediaPath: await mediaPathOf(await item.getProjectItem()),
+        inSeconds,
+        outSeconds,
       });
     }
     tracks.push({ trackIndex, trackName: `A${trackIndex + 1}`, clips });
