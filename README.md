@@ -59,6 +59,15 @@ claude mcp add media-analysis -- uv run --directory "<repo>\packages\analysis-se
 
 (Run `claude mcp add` from the folder you'll start Claude sessions in — registration is per-project-directory.)
 
+**Stock video (for `/pp-lyric-reel`):** the `fetch_stock_videos` tool needs a free
+API key from [Pexels](https://www.pexels.com/api/) and/or
+[Pixabay](https://pixabay.com/api/docs/). Register them as env vars on the
+analysis server (either key alone works; Pixabay is the fallback):
+
+```powershell
+claude mcp add media-analysis --env PEXELS_API_KEY=<key> --env PIXABAY_API_KEY=<key> -- uv run --directory "<repo>\packages\analysis-server" ppmcp-analysis
+```
+
 ## Daily use
 
 Launch Premiere → load plugin in UDT (once per Premiere launch) → start Claude →
@@ -82,6 +91,7 @@ tools below with the verified recipes and gotchas baked in:
 |---|---|
 | `/pp-create-reel <music> <footage folder> [duration] [title]` | Full beat-synced reel: skips the instrumental intro (opens on the first vocal), cuts on downbeats, smart slice-picking (motion/sharpness/faces), energy-mapped placement, beat punch-ins, a seamless loop ending, dissolves on every cut, optional PNG title on V2. **Ends at 59s by default, never 60** — YouTube rounds 60s+ past a minute. |
 | `/pp-create-reel-once <music> <footage folder> [chronological] [beatsPerClip]` | Same engine, but each clip appears **once** and the reel is whatever length the clips naturally fill (not forced to 59s) — for when you have few clips (5-8). Supports chronological order and spanning a clip across 2-3 beats. No repeats, no loop ending. |
+| `/pp-lyric-reel <music> [startSec endSec] [horizontal]` | Illustrate a song's lyrics with **stock video**: transcribe → Claude translates + interprets each line into a visual search query → pull a matching clip (Pexels → Pixabay fallback) per line → place it for the span its line is sung, cuts snapped to downbeats, music on A1. Vertical 9:16, visuals only. `startSec endSec` pick a window of the song (capped at 60s); omit them to auto-start at the first vocal. Always works on a bounded ≤60s slice (full-song transcribe is slow + mis-detects language from instrumental intros). Needs a stock API key (see below). |
 | `/pp-mark-beats [beats\|downbeats]` | Detect the music on A1 and drop a marker per downbeat (or every beat) on the timeline ruler. Any length; markers chunked at 500/call. |
 | `/pp-add-cross-dissolve [duration]` | Cross Dissolve at every cut on V1 in one bulk pass, default 1s centered. |
 
@@ -108,7 +118,7 @@ set params on every clip — the engine behind /pp-color-grade),
 `remove_track_effect` (strip an effect from every clip — the grade reset),
 `probe_effects` (read-only API-surface discovery).
 
-**media-analysis** (8): `analysis_health`, `detect_beats` (beats + downbeats + BPM,
+**media-analysis** (9): `analysis_health`, `detect_beats` (beats + downbeats + BPM,
 any media format), `find_best_moments` (ranked most-interesting windows per clip —
 motion 35% / sharpness 25% / faces 25% / exposure 15%; faces via YuNet on
 aspect-preserved frames, model lazy-downloads like the others; also returns absolute
@@ -117,7 +127,9 @@ aspect-preserved frames, model lazy-downloads like the others; also returns abso
 onset 40%; maps kinetic footage onto drops), `classify_song` (energetic↔cinematic
 `drive` from tempo + onset density + percussive fraction → recommended cutting
 pace), `transcribe` (faster-whisper, word timestamps), `generate_srt`,
-`render_text_png` (text overlays).
+`render_text_png` (text overlays), `fetch_stock_videos` (batched Pexels → Pixabay
+search + download + audio-strip; one call per song's lyric lines — the engine
+behind /pp-lyric-reel).
 
 ## The beat-edit recipe (what /pp-create-reel does internally)
 

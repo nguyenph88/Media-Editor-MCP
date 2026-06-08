@@ -1047,6 +1047,7 @@ dependencies = [
     { name = "numpy" },
     { name = "opencv-python-headless" },
     { name = "pillow" },
+    { name = "requests" },
     { name = "soundfile" },
     { name = "srt" },
 ]
@@ -1061,6 +1062,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=1.26" },
     { name = "opencv-python-headless", specifier = ">=4.10" },
     { name = "pillow", specifier = ">=10.4.0" },
+    { name = "requests", specifier = ">=2.32" },
     { name = "soundfile", specifier = ">=0.12.1" },
     { name = "srt", specifier = ">=3.5.3" },
 ]

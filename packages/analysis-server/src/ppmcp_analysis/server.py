@@ -201,6 +201,29 @@ def render_text_png(
     )
 
 
+@mcp.tool()
+def fetch_stock_videos(
+    queries: list[dict[str, str]],
+    out_dir: str,
+    orientation: str = "portrait",
+    min_duration: float = 3.0,
+    strip_audio: bool = True,
+) -> dict[str, Any]:
+    """Download a matching stock video per query (Pexels, then Pixabay fallback).
+
+    queries: [{"key": "L03", "query": "autumn leaves falling porch"}, ...] — one
+    BATCHED call for a whole song's lyric lines (never per-line MCP calls). `key`
+    ties each result back to its line. Filters to `orientation` (portrait =
+    vertical reel) and `duration >= min_duration` (pass longest slot + headroom).
+    Audio is stripped so stock audio can't stomp the music track on A1. Identical
+    queries download once and are reused. Needs PEXELS_API_KEY and/or
+    PIXABAY_API_KEY in the env. Returns local paths ready for import_files.
+    """
+    from .stock import fetch_stock_videos as _fetch
+
+    return _fetch(queries, out_dir, orientation, min_duration, strip_audio)
+
+
 def main() -> None:
     log(f"media-analysis server v{__version__} starting (stdio)")
     mcp.run()
