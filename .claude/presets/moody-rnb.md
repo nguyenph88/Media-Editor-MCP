@@ -21,8 +21,9 @@ Exact resource_ids + tuned params harvested from the template's `draft_content.j
 3. **Film Light Leak II** (the user's "Light Leak II") — `7399466219721608453` — background_animation 0.5, speed 0.33
 4. **Retro Glow** (a video EFFECT, not a filter) — `7399471416497736966` — intensity 0.2, filter 0.5, range 0.6
 5. **Screen Grain** — `7399470295117073670` — speed 0.35
-6. **Ripple Chromatic Aberration** — `7399467920155315462` — speed 0.33, intensity 1.0, horizontal_chromatic 0.6
-   — *was in the template; CONFIRM with the user whether it's part of the signature look.*
+
+*(Ripple Chromatic Aberration, `7399467920155315462`, was in the template but the user
+explicitly dropped it from the signature look — do not apply it.)*
 
 **Filter / look:**
 - **Cinematic Dusk** — `7533276240418032957` (user calls this the filter; stored in the template's
@@ -39,7 +40,7 @@ Exact resource_ids + tuned params harvested from the template's `draft_content.j
   and reject any returned clip whose `find_best_moments` face score is non-trivial.
 
 ## Notes
-- All 7 resources are **cached** in CapCut's `Cache/effect/<id>` folder (shared across drafts), so
+- All resources are **cached** in CapCut's `Cache/effect/<id>` folder (shared across drafts), so
   they render without download. **Deleting the `moody-aesthetic-v4` draft does NOT remove the
   cache** — the effects stay available. This preset is now the full record of the look.
 - Apply by exact `resource_id` for reliability; if a tool needs a name, search `list_effects` and
