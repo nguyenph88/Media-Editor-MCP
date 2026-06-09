@@ -44,11 +44,10 @@ This repo ships a project `.mcp.json` that registers the `capcut` server via
 `uv run --directory <repo> capcut-mcp`.
 
 The reel skill (`cc-create-reel`) also calls the **`media-analysis`** MCP server (beats,
-energy, transcription, best-moments) from the Premiere MCP repo. Register it too (it's likely
-already in your global Claude config):
+energy, transcription, best-moments), a sibling package in this monorepo. Register it too:
 
 ```
-uv run --directory D:/Workspace/Premiere-Pro-MCP/packages/analysis-server ppmcp-analysis
+uv run --directory packages/media-analysis media-analysis
 ```
 
 If a non-default CapCut install, point the server at your folders:

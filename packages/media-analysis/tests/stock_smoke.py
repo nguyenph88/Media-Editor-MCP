@@ -17,8 +17,8 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-from ppmcp_analysis.audio import _ffmpeg_exe  # noqa: E402
-from ppmcp_analysis.stock import fetch_stock_videos  # noqa: E402
+from media_analysis.audio import _ffmpeg_exe  # noqa: E402
+from media_analysis.stock import fetch_stock_videos  # noqa: E402
 
 failed = False
 

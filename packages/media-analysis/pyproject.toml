@@ -1,5 +1,5 @@
 [project]
-name = "ppmcp-analysis-server"
+name = "media-analysis-server"
 version = "0.1.0"
 description = "Media-analysis MCP server: beat detection, transcription, SRT, text-overlay PNGs"
 requires-python = ">=3.11,<3.13"
@@ -19,14 +19,14 @@ dependencies = [
 ]
 
 [project.scripts]
-ppmcp-analysis = "ppmcp_analysis.server:main"
+media-analysis = "media_analysis.server:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/ppmcp_analysis"]
+packages = ["src/media_analysis"]
 
 [tool.uv]
 # beat-this pulls torch; keep CPU wheels on Windows (no CUDA toolchain assumption)

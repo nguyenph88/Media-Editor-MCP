@@ -1,10 +1,12 @@
 {
-  "name": "premiere-pro-mcp",
+  "name": "media-editor-mcp",
   "version": "0.1.0",
   "private": true,
-  "description": "MCP server that lets Claude control Adobe Premiere Pro via a UXP plugin bridge",
+  "description": "Monorepo of MCP servers for video editors (CapCut, Premiere Pro) + a shared media-analysis server",
   "workspaces": [
-    "packages/*"
+    "packages/premiere-protocol",
+    "packages/premiere-server",
+    "packages/premiere-uxp-plugin"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",

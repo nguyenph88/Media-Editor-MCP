@@ -8,7 +8,7 @@ from pathlib import Path
 import soundfile as sf
 from beat_this.inference import File2Beats
 
-from ppmcp_analysis.audio import decode_to_wav, bpm_from_beats
+from media_analysis.audio import decode_to_wav, bpm_from_beats
 
 SRC = sys.argv[1]
 CHUNK = float(sys.argv[2]) if len(sys.argv) > 2 else 45.0

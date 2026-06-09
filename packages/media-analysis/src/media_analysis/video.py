@@ -107,7 +107,7 @@ def _yunet_model_path() -> "Path":
     from pathlib import Path
     from urllib.request import urlretrieve
 
-    cache = Path.home() / ".cache" / "ppmcp-analysis"
+    cache = Path.home() / ".cache" / "media-analysis"
     cache.mkdir(parents=True, exist_ok=True)
     model = cache / "face_detection_yunet_2023mar.onnx"
     if not model.exists():

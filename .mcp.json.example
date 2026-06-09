@@ -1,20 +1,26 @@
 {
+  "_comment": "Copy to .mcp.json (gitignored) and fill in real keys. Paths are relative to this repo root; open Claude Code here. The premiere server needs `npm run build:server` first and the UXP plugin loaded in Premiere.",
   "mcpServers": {
     "capcut": {
       "type": "stdio",
       "command": "uv",
-      "args": ["run", "--directory", "D:/Workspace/Capcut-MCP", "capcut-mcp"],
+      "args": ["run", "--directory", "packages/capcut-mcp", "capcut-mcp"],
       "env": { "PYTHONUTF8": "1" }
     },
     "media-analysis": {
       "type": "stdio",
       "command": "uv",
-      "args": ["run", "--directory", "D:/Workspace/Premiere-Pro-MCP/packages/analysis-server", "ppmcp-analysis"],
+      "args": ["run", "--directory", "packages/media-analysis", "media-analysis"],
       "env": {
         "PYTHONUTF8": "1",
         "PEXELS_API_KEY": "your-pexels-key-here",
         "PIXABAY_API_KEY": "your-pixabay-key-here"
       }
+    },
+    "premiere": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["packages/premiere-server/dist/index.js"]
     }
   }
 }

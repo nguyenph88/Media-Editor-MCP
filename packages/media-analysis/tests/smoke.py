@@ -44,7 +44,7 @@ check("synthesized 120 BPM click track", wav_path.exists(), str(wav_path))
 
 # --- 2. detect_beats end to end ---------------------------------------------
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-from ppmcp_analysis.server import detect_beats, generate_srt, render_text_png  # noqa: E402
+from media_analysis.server import detect_beats, generate_srt, render_text_png  # noqa: E402
 
 result = detect_beats.fn(str(wav_path)) if hasattr(detect_beats, "fn") else detect_beats(str(wav_path))
 check(
