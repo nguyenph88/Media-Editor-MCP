@@ -64,12 +64,15 @@ If a non-default CapCut install, point the server at your folders:
 | `create_draft` | Start a new in-memory draft (default 1080×1920 @30) |
 | `place_clip` | Add a video/image clip to the video track (seconds) |
 | `add_audio` | Add the music/audio track (seconds; `source_start` skips an intro) |
-| `add_text` | Add a text overlay |
+| `add_text` | Add a text overlay — optional font size, bold/italic, color, alignment, normalized position, fade in/out (or any text intro/outro animation), outline |
+| `add_text_block` | Build a stacked, staggered, popping-in lyric/caption block — each line its own animated text layer, alternating sizes |
+| `add_captions` | Lay a transcript (segments ± per-word timings) onto the timeline as captions — `lines` (clean lower-third subtitles) or `karaoke` (word-by-word pop), with font/size/color |
 | `add_filter` | Apply a color filter to a clip (CapCut's LUT/look) |
 | `add_clip_effect` | Apply a visual effect (glitch, blur, light leak, VHS…) |
 | `add_animation` | Add an in/out/loop animation to a clip |
 | `apply_transition` | Set the transition into the next clip |
-| `save_draft` | Write the draft to disk (backs up first; idempotent) |
+| `save_draft` | Write the draft to disk (backs up first; idempotent). `restart=True` relaunches CapCut so its home shows the change |
+| `reopen_capcut` | Force-close & relaunch CapCut so its home re-scans drafts (the only way to surface offline edits without manual close/open) |
 | `draft_status` | Inspect the active draft's plan |
 
 Effect/filter/animation tools are **idempotent** per clip (re-applying replaces rather than

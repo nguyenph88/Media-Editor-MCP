@@ -13,11 +13,35 @@ user-supplied name back into the pycapcut enum member needed to apply it.
 from __future__ import annotations
 
 import functools
+import json
+from pathlib import Path
 from typing import Dict, List, Optional
 
 import pycapcut as cc
 
 from . import paths
+
+
+@functools.lru_cache(maxsize=1)
+def _translations() -> Dict[str, str]:
+    """CN display name -> English label (curated). Missing entries fall back to the CN name."""
+    p = Path(__file__).with_name("translations.json")
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return {k: v for k, v in data.items() if not k.startswith("_")}
+
+
+@functools.lru_cache(maxsize=1)
+def _en_to_cn() -> Dict[str, str]:
+    """Lower-cased English label -> CN name, for resolving effects by their English alias."""
+    return {en.lower(): cn for cn, en in _translations().items()}
+
+
+def english_for(name: str) -> str:
+    """Curated English label for a CN effect/filter name, or '' if none is known."""
+    return _translations().get(name, "")
 
 # kind -> pycapcut enum class. These are the categories we expose.
 _KINDS: Dict[str, type] = {
@@ -48,14 +72,17 @@ def _meta_of(member) -> Optional[object]:
 def catalog() -> List[dict]:
     """The full merged catalog. Cached for the process lifetime (built once)."""
     records: List[dict] = []
+    trans = _translations()
     for kind, enum_cls in _KINDS.items():
         for member in enum_cls:
             meta = _meta_of(member)
             resource_id = str(getattr(meta, "resource_id", "") or "") if meta else ""
+            name = getattr(meta, "name", member.name) if meta else member.name
             records.append({
                 "kind": kind,
                 "key": member.name,                       # python identifier used by resolve()
-                "name": getattr(meta, "name", member.name) if meta else member.name,
+                "name": name,
+                "en": trans.get(name, ""),                # curated English label ("" if none)
                 "effect_id": str(getattr(meta, "effect_id", "") or "") if meta else "",
                 "resource_id": resource_id,
                 "is_vip": bool(getattr(meta, "is_vip", False)) if meta else False,
@@ -77,7 +104,8 @@ def search(query: str = "", kind: Optional[str] = None, *, cached_only: bool = F
             continue
         if cached_only and not rec["cached"]:
             continue
-        if q and q not in rec["name"].lower() and q not in rec["key"].lower():
+        if q and q not in rec["name"].lower() and q not in rec["key"].lower() \
+                and q not in rec.get("en", "").lower():
             continue
         out.append(rec)
         if len(out) >= limit:
@@ -96,6 +124,8 @@ def resolve(kind: str, name: str):
     enum_cls = _KINDS.get(kind)
     if enum_cls is None:
         raise KeyError(f"Unknown effect kind '{kind}'. Valid kinds: {sorted(_KINDS)}")
+    # An English alias resolves to its CN display name first.
+    name = _en_to_cn().get(name.lower(), name)
     # Exact key match.
     for member in enum_cls:
         if member.name == name:

@@ -9,6 +9,8 @@ CapCut must be CLOSED while we write a draft it has open, or our changes are los
 
 from __future__ import annotations
 
+import os
+import re
 import shutil
 import subprocess
 import time
@@ -50,6 +52,93 @@ def is_capcut_running() -> bool:
         return "CapCut.exe" in out.stdout
     except Exception:
         return False
+
+
+_FONT_DIRS = [
+    Path("C:/Windows/Fonts"),
+    Path.home() / "AppData/Local/Microsoft/Windows/Fonts",  # per-user installed fonts
+]
+
+
+def resolve_local_font(name: str) -> Optional[str]:
+    """Find a real .ttf/.otf on this machine for a font name or path. CapCut renders fonts from
+    an absolute file path, so this is the reliable way to set a non-system font (the built-in
+    FontType catalog doesn't render — its resources aren't downloaded and carry no URL).
+
+    Accepts a direct file path, or a fuzzy name ('UVN May Chu P' -> UVNMayChuP.TTF): compares
+    alphanumerics only, matching when either the query or the file stem is a prefix of the other.
+    Prefers an exact match, then the shortest (base, non -Italic/-Bold) variant."""
+    if not name:
+        return None
+    if os.path.isfile(name):
+        return name
+    q = re.sub(r"[^a-z0-9]", "", name.lower())
+    if not q:
+        return None
+    best = None  # (sort_key, path)
+    for d in _FONT_DIRS:
+        if not d.is_dir():
+            continue
+        for f in d.iterdir():
+            if f.suffix.lower() not in (".ttf", ".otf"):
+                continue
+            stem = re.sub(r"[^a-z0-9]", "", f.stem.lower())
+            if stem and (q == stem or q.startswith(stem) or stem.startswith(q)):
+                key = (q != stem, len(stem))  # exact first, then shortest stem
+                if best is None or key < best[0]:
+                    best = (key, str(f))
+    return best[1] if best else None
+
+
+def _capcut_launcher() -> Optional[Path]:
+    """A path to launch CapCut: the Start-menu/Desktop .lnk if present, else the bootstrap
+    Apps\\CapCut.exe (the stub that opens the current version). None if nothing is found."""
+    home = Path.home()
+    candidates = [
+        home / "AppData/Roaming/Microsoft/Windows/Start Menu/Programs/CapCut/CapCut.lnk",
+        home / "Desktop/CapCut.lnk",
+        paths.draft_dir().parents[2] / "Apps" / "CapCut.exe",  # .../Local/CapCut/Apps/CapCut.exe
+    ]
+    return next((p for p in candidates if p.exists()), None)
+
+
+def stop_capcut() -> bool:
+    """Force-close all CapCut.exe processes. Returns True if any were running. Force kill (/F)
+    so CapCut can't write its in-memory state back over a draft we just authored on disk."""
+    if not is_capcut_running():
+        return False
+    try:
+        subprocess.run(["taskkill", "/F", "/IM", "CapCut.exe", "/T"],
+                       capture_output=True, text=True, timeout=15)
+    except Exception:
+        pass
+    return True
+
+
+def launch_capcut() -> bool:
+    """Open CapCut via its launcher (non-blocking). Returns True if a launcher was found."""
+    import os
+    launcher = _capcut_launcher()
+    if launcher is None:
+        return False
+    try:
+        os.startfile(str(launcher))  # type: ignore[attr-defined]  # Windows shell launch, detached
+        return True
+    except Exception:
+        return False
+
+
+def restart_capcut() -> dict:
+    """Force-close CapCut (if running) and relaunch it, so its home screen re-scans the drafts
+    folder and shows newly written / changed drafts. CapCut only reads the draft catalog at
+    startup, so this restart is the only way to surface offline edits without manual close/open.
+    Opens to Home (no per-draft deep link)."""
+    was_running = stop_capcut()
+    if was_running:
+        time.sleep(1.5)  # let file handles release before the new instance starts
+    launched = launch_capcut()
+    return {"was_running": was_running, "relaunched": launched,
+            "launcher_found": _capcut_launcher() is not None}
 
 
 def backup_content(name: str) -> Optional[Path]:
