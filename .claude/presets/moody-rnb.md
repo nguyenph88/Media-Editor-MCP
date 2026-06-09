@@ -1,52 +1,47 @@
 # Moody R&B — default CapCut reel style
 
-The user's signature look. When building a CapCut reel (cc-create-reel / cc-add-effects)
-and no other style is requested, apply this by default.
+The user's signature look. When building a CapCut reel (cc-create-reel / cc-add-effects) and no
+other style is requested, apply this by default.
 
 ## Vibe
 - **Music:** R&B — sad, reminiscing, nostalgic.
 - **Look:** old, saturated, old-film. Faded vintage grade, warm, slightly crushed.
 - **Pacing:** snappy, activity-driven (lean fast, don't linger).
 
-## Effect stack (Step 5 "Decorate")
-Always **open with the two from the user's own `moody-aesthetic-v4` package**, then layer
-the rest across the clips. Names below are as the user says them; the catalog match
-(resolve live via `list_effects` / `list_filters`) is in brackets. Prefer `cached_only=true`.
+## Effect stack — VERIFIED from the `moody-aesthetic-v4` template (all CACHED ✓)
+Exact resource_ids + tuned params harvested from the template's `draft_content.json`. All are
+**video effects** — apply via `add_clip_effect` (kind=video_effect). **Open with Colorize B&W
++ Super-large Spot**, then layer the rest. Param values are CapCut-native 0–1 `effects_adjust_*`.
 
-CapCut splits these into **effects** (`add_clip_effect` / search `list_effects`) and **filters**
-(`add_filter` / search `list_filters`). **Use the right tool per item — searching the wrong
-category just fails.**
+**Openers (from moody-aesthetic-v4):**
+1. **Colorize B&W** — `7395470449389374726` — luminance 0.7, intensity 0.3, filter 0.1, rotate 0.9, speed 0.6
+2. **Super-large Spot** — `7395468542847618309` — size 1.0, number 0.1, intensity 0.6, speed 0.6, filter 0.2
 
-**Effects** (resolve via `list_effects`, kind=video_effect):
-1. **Colorized B&W** — opener, from `moody-aesthetic-v4`. An EFFECT, not a filter (the
-   `Elegant B&W`/`Alt. B&W`/`B&W Film` items are filters — do NOT confuse them). Not in the
-   offline maps → lives in that package or under a live name. **Resolve via `list_effects`
-   on first run and lock the matchName here.**
-2. **Super-large Spot** — opener, from `moody-aesthetic-v4`. An EFFECT. Not in offline maps
-   (`Light Spots / Bokeh` is only a nearest probe). **Resolve via `list_effects`.**
-3. **Light Leak II** → **`Leak 2`** (video_effect, **cached ✓**, user has used it).
-4. **Screen Grain** — video_effect; in catalog (downloads on open). Confirm exact name once.
+**Layer:**
+3. **Film Light Leak II** (the user's "Light Leak II") — `7399466219721608453` — background_animation 0.5, speed 0.33
+4. **Retro Glow** (a video EFFECT, not a filter) — `7399471416497736966` — intensity 0.2, filter 0.5, range 0.6
+5. **Screen Grain** — `7399470295117073670` — speed 0.35
+6. **Ripple Chromatic Aberration** — `7399467920155315462` — speed 0.33, intensity 1.0, horizontal_chromatic 0.6
+   — *was in the template; CONFIRM with the user whether it's part of the signature look.*
 
-**Filters** (resolve via `list_filters`):
-5. **Cinematic Dusk** — a FILTER. Not in offline maps. **Resolve via `list_filters` on first run.**
-6. **Retro Glow** → likely **`DeepGlow`** (filter, **cached ✓**, user's most-used glow) or
-   `Golden Nightglow`. **Confirm once.**
+**Filter / look:**
+- **Cinematic Dusk** — `7533276240418032957` (user calls this the filter; stored in the template's
+  `effects` bucket, no tuned params).
 
 ## Grade
-- `add_filter` the SAME vintage/saturated film look across all clips for a unified grade;
-  push saturation, faded/old-film feel. Vary intensity by energy (drop = higher).
+- `add_filter` the SAME vintage/saturated film look across all clips for a unified grade; push
+  saturation, faded/old-film feel. Vary intensity by energy (drop = higher). Cinematic Dusk sits
+  on top as the dusk look.
 
 ## Stock footage rule (whenever fetch_stock_videos is used — e.g. lyric reels)
-- **NO human faces.** Silhouettes, from-behind, side, and top/aerial shots are fine — faces
-  are not, at all. Bias search queries toward "silhouette / from behind / back view /
-  faceless / aerial", and reject any returned clip whose `find_best_moments` face score is
-  non-trivial.
+- **NO human faces.** Silhouettes, from-behind, side, and top/aerial shots are fine — faces are
+  not, at all. Bias queries toward "silhouette / from behind / back view / faceless / aerial",
+  and reject any returned clip whose `find_best_moments` face score is non-trivial.
 
-## Verification status (update as confirmed)
-- **Confirmed:** `Leak 2` (effect = Light Leak II).
-- **Needs one-time first-run resolution** — search the RIGHT category, show the user, then
-  replace the bracketed note above with the locked matchName/effect_id:
-  - effects (`list_effects`): **Colorized B&W**, **Super-large Spot**, **Screen Grain** (exact name)
-  - filters (`list_filters`): **Cinematic Dusk**, **Retro Glow** (confirm = `DeepGlow`?)
-- `moody-aesthetic-v4` is the user's own CapCut effect-package name, **not** a catalog entry —
-  its contents (Colorized B&W, Super-large Spot) resolve live via `list_effects`.
+## Notes
+- All 7 resources are **cached** in CapCut's `Cache/effect/<id>` folder (shared across drafts), so
+  they render without download. **Deleting the `moody-aesthetic-v4` draft does NOT remove the
+  cache** — the effects stay available. This preset is now the full record of the look.
+- Apply by exact `resource_id` for reliability; if a tool needs a name, search `list_effects` and
+  match the rid. `add_clip_effect`'s `params` may expect a 0–100 scale — convert the 0–1 values
+  above (×100) if so.
