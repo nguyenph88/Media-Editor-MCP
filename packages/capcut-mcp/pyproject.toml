@@ -6,6 +6,10 @@ requires-python = ">=3.11,<3.13"
 dependencies = [
     "mcp>=1.12.0",
     "pyCapCut>=0.0.3",
+    # Bundled ffmpeg binary (NOT torch/whisper — keeps this package light) used to
+    # extract an audio-only sidecar when music is given as a video file (mp4): pyCapCut's
+    # AudioMaterial rejects any file with a video track.
+    "imageio-ffmpeg>=0.5.1",
 ]
 
 [project.scripts]

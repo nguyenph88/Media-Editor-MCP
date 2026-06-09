@@ -82,6 +82,9 @@ class ClipSpec:
     source_start_us: int = 0
     track: Optional[str] = None
     volume: float = 1.0
+    scale: float = 1.0           # uniform zoom (1.01 = 101%)
+    mirror: bool = False         # horizontal flip
+    speed: float = 1.0           # playback rate (0.8 = slo-mo)
     effects: List[FxSpec] = field(default_factory=list)
     filters: List[FilterSpec] = field(default_factory=list)
     animations: List[AnimSpec] = field(default_factory=list)
@@ -205,11 +208,21 @@ def _apply_anim(seg, anim: AnimSpec) -> None:
 def _build_video_segment(script: cc.ScriptFile, clip: ClipSpec):
     mat = cc.VideoMaterial(clip.path)
     script.add_material(mat)
+    # At speed s the clip still fills duration_us on the timeline but consumes duration_us*s
+    # of source. pyCapCut: with both source_timerange and speed given, target = source/speed.
+    src_dur = round(clip.duration_us * clip.speed) if clip.speed != 1.0 else clip.duration_us
+    clip_settings = None
+    if clip.scale != 1.0 or clip.mirror:
+        clip_settings = cc.ClipSettings(
+            scale_x=clip.scale, scale_y=clip.scale, flip_horizontal=clip.mirror,
+        )
     seg = cc.VideoSegment(
         mat,
         _timerange(clip.start_us, clip.duration_us),
-        source_timerange=_timerange(clip.source_start_us, clip.duration_us),
+        source_timerange=_timerange(clip.source_start_us, src_dur),
+        speed=clip.speed if clip.speed != 1.0 else None,
         volume=clip.volume,
+        clip_settings=clip_settings,
     )
     # Filters / effects / animations / transition must be attached BEFORE add_segment.
     for f in clip.filters:

@@ -115,17 +115,24 @@ def create_draft(name: str, width: int = 1080, height: int = 1920, fps: int = 30
 
 @mcp.tool()
 def place_clip(path: str, start: float, duration: float, source_start: float = 0.0,
-               volume: float = 1.0) -> dict[str, Any]:
+               volume: float = 1.0, scale: float = 1.0, mirror: bool = False,
+               speed: float = 1.0) -> dict[str, Any]:
     """Place a video/image clip on the main video track of the active draft.
 
     start/duration/source_start are in SECONDS. start is the clip's position on the
     timeline; source_start trims into the source media. Main-track clips should tile from
     0s with no gaps. Returns the clip's index, used to attach effects/filters later.
+
+    Per-clip transforms: scale (1.0 = 100%, e.g. 1.01 for a 101% zoom), mirror (horizontal
+    flip), speed (playback rate, e.g. 0.8 for slo-mo). The clip still fills `duration` on the
+    timeline at any speed — at speed<1 it consumes less source, so keep
+    source_start + duration*speed within the clip.
     """
     s = session.active()
     s.clips.append(session.ClipSpec(
         path=path, start_us=_us(start), duration_us=_us(duration),
         source_start_us=_us(source_start), volume=volume,
+        scale=scale, mirror=mirror, speed=speed,
     ))
     return {"clipIndex": len(s.clips) - 1, "clips": len(s.clips)}
 
@@ -139,8 +146,12 @@ def add_audio(path: str, start: float, duration: float, source_start: float = 0.
     beats (optional): timeline positions in SECONDS to mark as beat markers on the clip
     (the dots CapCut's "Beats" feature draws) — pass detect_beats output so the draft opens
     with beats already marked. Returns the audio index.
+
+    Video files (e.g. mp4 music) are fine: their audio is auto-extracted to an audio-only
+    sidecar first, since CapCut audio materials can't contain a video track.
     """
     s = session.active()
+    path = draft.ensure_audio_only(path)  # mp4/video music -> audio-only sidecar
     s.audios.append(session.AudioSpec(
         path=path, start_us=_us(start), duration_us=_us(duration),
         source_start_us=_us(source_start), volume=volume,

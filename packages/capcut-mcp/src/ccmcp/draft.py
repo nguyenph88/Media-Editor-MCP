@@ -24,6 +24,39 @@ from . import paths
 BACKUP_SUFFIX = ".ccmcp.bak"  # distinct from CapCut's own ".bak" so we never clobber it
 
 
+def ensure_audio_only(path: str) -> str:
+    """Return a path to an audio-only file for `path`.
+
+    pyCapCut's ``AudioMaterial`` rejects any file that carries a video track (e.g. mp4 music
+    files raise "音频素材不应包含视频轨道") and has no extract/detach API. So if `path` has a
+    video track, extract its audio to a sidecar ``<stem>.ccmcp-audio.m4a`` next to the source
+    (reused if already extracted and at least as new as the source) and return that. Audio-only
+    inputs are returned unchanged.
+    """
+    import pymediainfo  # transitive dep via pyCapCut
+
+    src = Path(path)
+    if not src.exists():
+        return path  # let AudioMaterial raise its clear FileNotFoundError
+    info = pymediainfo.MediaInfo.parse(str(src))
+    if not info.video_tracks:
+        return path  # already audio-only — nothing to do
+    sidecar = src.with_name(f"{src.stem}.ccmcp-audio.m4a")
+    if sidecar.exists() and sidecar.stat().st_mtime >= src.stat().st_mtime:
+        return str(sidecar)  # reuse a fresh prior extraction
+    import imageio_ffmpeg  # bundled ffmpeg binary
+
+    ff = imageio_ffmpeg.get_ffmpeg_exe()
+    proc = subprocess.run(
+        [ff, "-y", "-i", str(src), "-vn", "-c:a", "aac", "-b:a", "192k", str(sidecar)],
+        capture_output=True, text=True,
+    )
+    if proc.returncode != 0 or not sidecar.exists():
+        tail = (proc.stderr or "")[-400:]
+        raise RuntimeError(f"Failed to extract audio from {src.name}: {tail}")
+    return str(sidecar)
+
+
 def get_folder() -> DraftFolder:
     """A DraftFolder bound to the user's CapCut drafts directory.
 
