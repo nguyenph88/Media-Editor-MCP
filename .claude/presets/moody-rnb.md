@@ -18,7 +18,8 @@ Exact resource_ids + tuned params harvested from the template's `draft_content.j
 2. **Super-large Spot** — `7395468542847618309` — size 1.0, number 0.1, intensity 0.6, speed 0.6, filter 0.2
 
 **Layer:**
-3. **Film Light Leak II** (the user's "Light Leak II") — `7399466219721608453` — background_animation 0.5, speed 0.33
+3. **Film Light Leak II** (the user's "Light Leak II") — `7399466219721608453` — **atmosphere
+   30** (NOT the default 100 — keep the leak subtle); template also had background_animation 0.5, speed 0.33
 4. **Retro Glow** (a video EFFECT, not a filter) — `7399471416497736966` — intensity 0.2, filter 0.5, range 0.6
 5. **Screen Grain** — `7399470295117073670` — speed 0.35
 
@@ -32,11 +33,9 @@ explicitly dropped it from the signature look — do not apply it.)*
 ## Per-clip transforms (EVERY footage clip)
 - **101% zoom** — scale 1.01 (hides edge artifacts, subtle push-in).
 - **Horizontal mirror** — flip every clip.
-- **0.8× speed** — slo-mo, suits the moody/reminiscing mood. For a fixed beat slot of length
-  `dur`, consume `dur × 0.8` of source at speed 0.8 (pycapcut keeps the slot length).
-- Supported by pycapcut (`ClipSettings.scale_x/scale_y`, `ClipSettings.flip_horizontal`,
-  `VideoSegment.speed`) but **NOT yet exposed by the capcut `place_clip` tool** — needs a code
-  change to apply automatically.
+- **0.6× speed** — slo-mo, suits the moody/reminiscing mood. For a fixed beat slot of length
+  `dur`, consume `dur × 0.6` of source at speed 0.6 (pycapcut keeps the slot length).
+- Exposed on the capcut `place_clip` tool: `scale`, `mirror`, `speed`.
 
 ## Grade
 - `add_filter` the SAME vintage/saturated film look across all clips for a unified grade; push

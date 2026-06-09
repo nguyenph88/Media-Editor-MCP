@@ -67,10 +67,10 @@ For each slot i in chronological order (the declarative plan order = timeline or
 - `start = boundary[i]`, `duration = boundary[i+1] − boundary[i]`.
 - `source_start` = appearance k of a clip uses its k-th ranked `find_best_moments` window
   start (fall back to early/mid/late thirds only if windows < appearances). Never reuse a window.
-- `place_clip <path> start duration source_start volume=0 scale=1.01 mirror=true speed=0.8`
+- `place_clip <path> start duration source_start volume=0 scale=1.01 mirror=true speed=0.6`
   → returns `clipIndex`. Per the moody-rnb preset every clip gets **101% zoom, horizontal
-  mirror, and 0.8× slo-mo**. At speed 0.8 the clip still fills the slot but consumes
-  `dur×0.8` of source — keep `source_start + dur×0.8 ≤ clip length`.
+  mirror, and 0.6× slo-mo**. At speed 0.6 the clip still fills the slot but consumes
+  `dur×0.6` of source — keep `source_start + dur×0.6 ≤ clip length`.
 - **ENERGY MAPPING:** sort the (clip,window) pool by motion, sort slots by energy, zip them —
   kinetic windows on 'drop' slots, calm on 'calm'. Then fix adjacency (no same clip
   back-to-back) by swapping with the nearest different-clip slot.
