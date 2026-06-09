@@ -80,6 +80,12 @@ snapping). Keep `source_start + duration ≤ clip duration`.
 
 ## Step 5 — Decorate (the CapCut payoff)
 
+**Default style:** unless the user asks for a different look, apply the user's signature
+**moody R&B** style — read [`.claude/presets/moody-rnb.md`](../../presets/moody-rnb.md) and
+follow its effect stack, grade, and pacing (it opens with their `moody-aesthetic-v4` pair,
+then layers Leak 2 / DeepGlow / Screen Grain etc.). Some effect names there still need a
+one-time catalog resolution — confirm the match with the user and lock it into the preset.
+
 Use the catalog tools; **prefer cached effects** (`cached_only=true` → guaranteed to render
 without CapCut downloading on open). `list_effects`/`list_filters` rank cached + non-VIP first.
 

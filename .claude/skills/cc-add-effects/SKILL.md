@@ -27,7 +27,10 @@ cached. Results already rank cached + non-VIP first.
 
 ## Steps
 
-1. **Interpret the request.** Map the user's vibe to catalog searches:
+1. **Interpret the request.** If the user names a vibe, map it to catalog searches. If they
+   give no specific look (or ask for "my style" / a moody R&B reel), apply the default
+   signature style in [`.claude/presets/moody-rnb.md`](../../presets/moody-rnb.md) — its
+   effect stack, grade, and the no-faces stock rule. Otherwise:
    - "warm / cinematic / moody grade" → `list_filters query="..." cached_only=true`, pick one.
    - "glitch / VHS / light leak / blur / shake" → `list_effects kind=video_effect query="..."`.
    - "zoom / bounce / slide in" → `list_effects kind=intro` (and `kind=outro`).
