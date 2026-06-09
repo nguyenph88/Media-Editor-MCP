@@ -37,6 +37,18 @@ Polyglot monorepo — unified by git, Claude skills, and one MCP config, **not**
 └─ scripts/
 ```
 
+## History & contribution model
+
+`capcut-mcp` and the Premiere stack were each imported **once** via `git subtree add`
+(then restructured into `packages/`). **This monorepo is the single source of truth** —
+the full history of both originals is preserved here in `main`.
+
+- Work on `main`. No subtrees, no submodules, no per-package branches.
+- Do **not** run `git subtree pull`/`push` against the old standalone repos. The Premiere
+  code was moved out of its original `_pp/` prefix, so the prefixes no longer align and a
+  sync would corrupt the tree. Treat the original capcut/premiere repos as archived.
+- New work in any package is a normal commit here; there is nothing to sync upstream.
+
 ## Setup
 
 ```bash
