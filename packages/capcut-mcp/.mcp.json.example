@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "capcut": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "--directory", "D:/Workspace/Capcut-MCP", "capcut-mcp"],
+      "env": { "PYTHONUTF8": "1" }
+    },
+    "media-analysis": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "--directory", "D:/Workspace/Premiere-Pro-MCP/packages/analysis-server", "ppmcp-analysis"],
+      "env": {
+        "PYTHONUTF8": "1",
+        "PEXELS_API_KEY": "your-pexels-key-here",
+        "PIXABAY_API_KEY": "your-pixabay-key-here"
+      }
+    }
+  }
+}

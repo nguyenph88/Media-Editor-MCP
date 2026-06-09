@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+tests/assets/
+*.egg-info/
+dist/
+build/
+.uv/
+
+# Scratch workspace: extracted frames, audio slices, transcripts, one-off build scripts.
+.frames/
+
+# Local MCP config holds API keys (Pexels/Pixabay) — keep it out of git.
+# Share the sanitized template instead: .mcp.json.example
+.mcp.json
