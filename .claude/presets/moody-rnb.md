@@ -29,15 +29,26 @@ explicitly dropped it from the signature look — do not apply it.)*
 - **Cinematic Dusk** — `7533276240418032957` (user calls this the filter; stored in the template's
   `effects` bucket, no tuned params).
 
+## Per-clip transforms (EVERY footage clip)
+- **101% zoom** — scale 1.01 (hides edge artifacts, subtle push-in).
+- **Horizontal mirror** — flip every clip.
+- **0.8× speed** — slo-mo, suits the moody/reminiscing mood. For a fixed beat slot of length
+  `dur`, consume `dur × 0.8` of source at speed 0.8 (pycapcut keeps the slot length).
+- Supported by pycapcut (`ClipSettings.scale_x/scale_y`, `ClipSettings.flip_horizontal`,
+  `VideoSegment.speed`) but **NOT yet exposed by the capcut `place_clip` tool** — needs a code
+  change to apply automatically.
+
 ## Grade
 - `add_filter` the SAME vintage/saturated film look across all clips for a unified grade; push
   saturation, faded/old-film feel. Vary intensity by energy (drop = higher). Cinematic Dusk sits
   on top as the dusk look.
 
-## Stock footage rule (whenever fetch_stock_videos is used — e.g. lyric reels)
+## Stock footage rules (whenever fetch_stock_videos is used — e.g. lyric reels)
 - **NO human faces.** Silhouettes, from-behind, side, and top/aerial shots are fine — faces are
   not, at all. Bias queries toward "silhouette / from behind / back view / faceless / aerial",
   and reject any returned clip whose `find_best_moments` face score is non-trivial.
+- **NO abstract/texture footage** (bokeh, frost, light particles, etc.) — use concrete, literal
+  scenes that illustrate the lyric.
 
 ## Notes
 - All resources are **cached** in CapCut's `Cache/effect/<id>` folder (shared across drafts), so
