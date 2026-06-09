@@ -7,7 +7,7 @@ description: Remove burned-in caption text from a video by inpainting, saving a 
 
 Remove static burned-in text (captions/subtitles) from a rendered video and write a clean copy. Pure OpenCV + ffmpeg — no Premiere, no MCP plugin. Audio is copied untouched.
 
-Wraps the standalone script `packages/analysis-server/erase_text.py`.
+Wraps the standalone script `packages/media-analysis/erase_text.py`.
 
 ## How it works (so you tune the right knob)
 
@@ -20,7 +20,7 @@ This catches the full caption (even faint/fading frames), rejects moving bright 
 
 ## How to run
 
-From `packages/analysis-server/` using its venv python:
+From `packages/media-analysis/` using its venv python:
 `./.venv/Scripts/python.exe erase_text.py "<path>" [flags]`
 
 Key flags:

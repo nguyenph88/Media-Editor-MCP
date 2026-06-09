@@ -30,10 +30,10 @@ Do all of this in ONE local planning script (`uv run --no-sync ... python tests/
 
 ## Step 2 — Probe & pick footage
 
-Probe every candidate with `packages/analysis-server/tests/probe_media.py` (duration + resolution + fps), AND check for audio streams (`ffmpeg -i`, look for `Stream .*Audio`):
+Probe every candidate with `packages/media-analysis/tests/probe_media.py` (duration + resolution + fps), AND check for audio streams (`ffmpeg -i`, look for `Stream .*Audio`):
 
 ```powershell
-uv run --directory <repo>\packages\analysis-server python tests/probe_media.py <files...>
+uv run --directory <repo>\packages\media-analysis python tests/probe_media.py <files...>
 ```
 
 - **REJECT any footage clip that has an audio stream** — `place_clip` would drop its audio onto the music track and there is NO tool to remove audio clips. (iPhone .MOV and screen-recorded mp4s usually have audio; stock/Pexels verticals usually don't.)

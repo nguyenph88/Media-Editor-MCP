@@ -23,10 +23,10 @@ slot); editing primitives execute them in Premiere.
 
 | Package | What |
 |---|---|
-| `packages/protocol` | Shared wire types for the bridge |
-| `packages/server` | Node MCP server + embedded WebSocket bridge |
-| `packages/uxp-plugin` | UXP panel inside Premiere (executes all timeline commands) |
-| `packages/analysis-server` | Python MCP server (beat_this, faster-whisper, Pillow) — models lazy-load once and stay resident |
+| `packages/premiere-protocol` | Shared wire types for the bridge |
+| `packages/premiere-server` | Node MCP server + embedded WebSocket bridge |
+| `packages/premiere-uxp-plugin` | UXP panel inside Premiere (executes all timeline commands) |
+| `packages/media-analysis` | Python MCP server (beat_this, faster-whisper, Pillow) — models lazy-load once and stay resident |
 
 ## Requirements
 
@@ -37,36 +37,22 @@ slot); editing primitives execute them in Premiere.
 
 ## Install (one time)
 
-```powershell
-git clone https://github.com/nguyenph88/Premiere-Pro-MCP.git
-cd Premiere-Pro-MCP
-npm install && npm run build
-cd packages\analysis-server && uv sync && cd ..\..
-```
+This package lives in the **Media-Editor-MCP** monorepo. Do the full setup —
+clone, `npm install && npm run build`, the Python `uv sync`s, and MCP
+registration via `.mcp.json` — from the [root README](../../README.md). The
+Premiere-specific steps below assume that's done.
 
 **Enable developer mode in Premiere:** Edit ▸ Preferences ▸ Plug-ins ▸ check
 "Enable developer mode", restart Premiere. (Without it UDT can't see Premiere.)
 
-**Load the plugin:** UDT ▸ Add Plugin ▸ `packages/uxp-plugin/manifest.json` ▸
+**Load the plugin:** UDT ▸ Add Plugin ▸ `packages/premiere-uxp-plugin/manifest.json` ▸
 Load & Watch. The "MCP Bridge" panel appears in Premiere.
-
-**Register both servers (Claude Code):**
-
-```powershell
-claude mcp add premiere-pro -- node "<repo>\packages\server\dist\index.js"
-claude mcp add media-analysis -- uv run --directory "<repo>\packages\analysis-server" ppmcp-analysis
-```
-
-(Run `claude mcp add` from the folder you'll start Claude sessions in — registration is per-project-directory.)
 
 **Stock video (for `/pp-lyric-reel`):** the `fetch_stock_videos` tool needs a free
 API key from [Pexels](https://www.pexels.com/api/) and/or
-[Pixabay](https://pixabay.com/api/docs/). Register them as env vars on the
-analysis server (either key alone works; Pixabay is the fallback):
-
-```powershell
-claude mcp add media-analysis --env PEXELS_API_KEY=<key> --env PIXABAY_API_KEY=<key> -- uv run --directory "<repo>\packages\analysis-server" ppmcp-analysis
-```
+[Pixabay](https://pixabay.com/api/docs/). Set them as `PEXELS_API_KEY` /
+`PIXABAY_API_KEY` in the `media-analysis` server's `env` block in `.mcp.json`
+(either key alone works; Pixabay is the fallback) — see `.mcp.json.example`.
 
 ## Daily use
 
@@ -134,7 +120,7 @@ behind /pp-lyric-reel).
 ## The beat-edit recipe (what /pp-create-reel does internally)
 
 1. `detect_beats` on the music → downbeat list; slot boundaries = `[0] + downbeats under target + [target]` (target 59s by default)
-2. Probe candidates (`packages/analysis-server/tests/probe_media.py` — duration/resolution/fps) and **reject any footage with an audio stream** — placed audio would land over the music and there is no audio-remove tool; then `find_best_moments` on each survivor — slices come from its ranked windows, and the single best window across all clips opens the reel (the hook)
+2. Probe candidates (`packages/media-analysis/tests/probe_media.py` — duration/resolution/fps) and **reject any footage with an audio stream** — placed audio would land over the music and there is no audio-remove tool; then `find_best_moments` on each survivor — slices come from its ranked windows, and the single best window across all clips opens the reel (the hook)
 3. `create_sequence` from a clip (settings match media; prefer a 60fps seed for cut precision), clear the seed clip
 4. Place music **sliced `in=0, out=target` in this one placement** (audio on A1 can never be shortened later), then `remove_clips` its video item — the linked audio stays on A1
 5. Per downbeat slot: `place_clip` with a varying source slice, **overshooting ~3 frames** — the next overwrite trims it frame-tight (this defeats mp4 start-offset quirks). Strictly chronological; last slot gets an exact out, no overshoot
@@ -167,7 +153,7 @@ behind /pp-lyric-reel).
 - **UDT "No applications are connected":** enable developer mode in Premiere (above), restart Premiere.
 - **Panel log `Permission denied to the url ws://...`:** manifest must use `"network": { "domains": "all" }` (already set); UXP rejects per-URL localhost entries.
 - **Manifest changes ignored on Reload:** Unload → Load & Watch (UDT caches manifests).
-- **`PREMIERE_API_ERROR` with `own:{...} proto:{...}` dumps:** that's the built-in API-discovery reflection — the error shows the real object shape; fix the accessor in `packages/uxp-plugin/src/handlers/`, rebuild, UDT hot-reloads.
+- **`PREMIERE_API_ERROR` with `own:{...} proto:{...}` dumps:** that's the built-in API-discovery reflection — the error shows the real object shape; fix the accessor in `packages/premiere-uxp-plugin/src/handlers/`, rebuild, UDT hot-reloads.
 - **Tools say plugin not connected:** the MCP Bridge panel must be open with a green dot; reload via UDT after every Premiere restart.
 - **First `detect_beats`/`transcribe` call is slow:** model download + load (one-time per process); subsequent calls are fast.
 
@@ -177,10 +163,10 @@ behind /pp-lyric-reel).
 npm run build            # protocol + server + plugin
 npm run watch:plugin     # pair with UDT Watch for hot reload
 node scripts/smoke.mjs   # protocol round-trip without Premiere (isolated port 3199)
-cd packages\analysis-server; uv run python tests/smoke.py   # synthesized 120BPM click-track test
+cd packages\media-analysis; uv run python tests/smoke.py   # synthesized 120BPM click-track test
 ```
 
-Adding a Premiere tool: command in `packages/protocol/src/commands.ts` → handler in
-`packages/uxp-plugin/src/handlers/` → register in `dispatcher.ts` → tool in
-`packages/server/src/mcp/registerTools.ts`. Adding an analysis tool: one decorated
-function in `packages/analysis-server/src/ppmcp_analysis/server.py`.
+Adding a Premiere tool: command in `packages/premiere-protocol/src/commands.ts` → handler in
+`packages/premiere-uxp-plugin/src/handlers/` → register in `dispatcher.ts` → tool in
+`packages/premiere-server/src/mcp/registerTools.ts`. Adding an analysis tool: one decorated
+function in `packages/media-analysis/src/media_analysis/server.py`.

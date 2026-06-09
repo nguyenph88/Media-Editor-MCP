@@ -20,8 +20,10 @@ tests/assets/
 .frames/
 
 # Local MCP config holds API keys (Pexels/Pixabay) — keep it out of git.
-# Share the sanitized template instead: .mcp.json.example
+# Share the sanitized templates instead: .mcp.json.example, .mcp.*.json.example
 .mcp.json
+.mcp.capcut.json
+.mcp.premiere.json
 
 # Claude Code local state
 .claude/scheduled_tasks.lock

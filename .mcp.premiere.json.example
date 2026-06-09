@@ -1,0 +1,20 @@
+{
+  "_comment": "Premiere-only profile: premiere + shared media-analysis (NO capcut). Launch with `claude --strict-mcp-config --mcp-config .mcp.premiere.json` to load only these two servers and skip CapCut's tool schemas. Needs `npm run build` first and the UXP plugin loaded in Premiere. Copy to .mcp.premiere.json (gitignored) and fill in real keys.",
+  "mcpServers": {
+    "premiere": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["packages/premiere-server/dist/index.js"]
+    },
+    "media-analysis": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "--directory", "packages/media-analysis", "media-analysis"],
+      "env": {
+        "PYTHONUTF8": "1",
+        "PEXELS_API_KEY": "your-pexels-key-here",
+        "PIXABAY_API_KEY": "your-pixabay-key-here"
+      }
+    }
+  }
+}

@@ -55,4 +55,23 @@ cp .mcp.json.example .mcp.json
 Open Claude Code at this repo root so the relative paths in `.mcp.json` resolve. `.mcp.json` is
 gitignored (it holds API keys); share changes via `.mcp.json.example`.
 
+### Per-editor profiles (lighter context)
+
+All three servers in `.mcp.json` load their tool schemas into every session (~12–18k tokens),
+but you never edit in CapCut and Premiere at once. Two slimmer profiles each load just one
+editor plus the shared `media-analysis`:
+
+```bash
+# CapCut session — skips Premiere's ~6–8k tokens of tool schemas
+claude --strict-mcp-config --mcp-config .mcp.capcut.json
+
+# Premiere session — skips CapCut's tool schemas
+claude --strict-mcp-config --mcp-config .mcp.premiere.json
+```
+
+`--strict-mcp-config` makes Claude Code use *only* the named file, ignoring the default
+`.mcp.json` and user/global servers. Both profiles are gitignored (they hold API keys); copy
+the `.mcp.capcut.json.example` / `.mcp.premiere.json.example` templates and add your keys. Use
+plain `.mcp.json` (all servers) when you want everything loaded.
+
 Per-package details: [CapCut](packages/capcut-mcp/README.md) · [Premiere](packages/premiere-server/README.md).

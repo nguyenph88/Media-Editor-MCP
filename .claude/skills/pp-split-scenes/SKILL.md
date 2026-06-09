@@ -7,7 +7,7 @@ description: Split a long video into one file per detected scene/shot, saved to 
 
 Detect scene/shot boundaries in a video and export each scene as its own file on disk. Pure ffmpeg + PySceneDetect — does NOT need Premiere or the MCP plugin. Good for un-stitching an old montage back into its component shots.
 
-Wraps the standalone script `packages/analysis-server/split_scenes.py`.
+Wraps the standalone script `packages/media-analysis/split_scenes.py`.
 
 **Inputs:**
 - `<video file>` (required) — absolute path to the source video.
@@ -17,7 +17,7 @@ Wraps the standalone script `packages/analysis-server/split_scenes.py`.
 
 ## How to run
 
-All commands run from `packages/analysis-server/` using its venv python:
+All commands run from `packages/media-analysis/` using its venv python:
 `./.venv/Scripts/python.exe split_scenes.py "<path>" [flags]`
 
 Flags: `--out DIR`, `--threshold N`, `--min-len SEC`, `--detector content|adaptive` (adaptive = fewer false splits on shaky/fast footage), `--copy` (fast lossless keyframe-snapped cuts vs default frame-accurate re-encode), `--list` (detect only, no files).

@@ -78,13 +78,10 @@ def find_best_moments(
 ) -> dict[str, Any]:
     """Find the most visually interesting moments in a video clip.
 
-    Scores downsampled frames on motion (35%), sharpness (25%), face presence
-    (25%, Haar on aspect-preserved frames — faces are what viewers look at)
-    and exposure (15%), then returns up to `count` non-overlapping windows of
-    `window_seconds`, best first. Face scores are ABSOLUTE, so windows with
-    people outrank empty ones. Use the top window's start/end as the
-    place_clip slice for that clip — and put the single best moment across
-    all clips FIRST in a reel (the hook). ~2s per clip.
+    Scores frames on motion (35%), sharpness (25%), face presence (25%) and
+    exposure (15%); returns up to `count` non-overlapping `window_seconds`
+    windows, best first. Face scores are absolute, so windows with people
+    outrank empty ones. ~2s per clip.
     """
     from .video import find_best_windows
 
@@ -114,10 +111,8 @@ def detect_energy(file_path: str, slot_boundaries: list[float]) -> dict[str, Any
     slot_boundaries: timeline seconds marking slot edges (e.g. the downbeats
     used for a beat-edit, plus the final cut: [0, 1.82, 3.54, ..., 59]).
     Returns one entry per slot with energy 0..1 (normalized across the track)
-    and a label calm/build/drop. Use it to place the MOST kinetic footage
-    (highest find_best_moments motion) on 'drop' slots and calm clips on
-    'calm' slots — the edit then breathes with the music. RMS loudness 60% +
-    onset strength 40%.
+    and a label calm/build/drop — map kinetic footage onto 'drop' slots, calm
+    onto 'calm'. RMS loudness 60% + onset strength 40%.
     """
     from .energy import detect_energy as _detect_energy
 

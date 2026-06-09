@@ -9,7 +9,7 @@
     "packages/premiere-uxp-plugin"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
+    "build": "npm run build -w @ppmcp/protocol && npm run build -w @ppmcp/server && npm run build -w @ppmcp/uxp-plugin",
     "build:server": "npm run build -w @ppmcp/server",
     "build:plugin": "npm run build -w @ppmcp/uxp-plugin",
     "dev:server": "npm run dev -w @ppmcp/server",

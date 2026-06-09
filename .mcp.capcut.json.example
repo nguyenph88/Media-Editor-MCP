@@ -1,0 +1,21 @@
+{
+  "_comment": "CapCut-only profile: capcut + shared media-analysis (NO premiere). Launch with `claude --strict-mcp-config --mcp-config .mcp.capcut.json` to load only these two servers and skip Premiere's ~6-8k tokens of tool schemas. Copy to .mcp.capcut.json (gitignored) and fill in real keys.",
+  "mcpServers": {
+    "capcut": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "--directory", "packages/capcut-mcp", "capcut-mcp"],
+      "env": { "PYTHONUTF8": "1" }
+    },
+    "media-analysis": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "--directory", "packages/media-analysis", "media-analysis"],
+      "env": {
+        "PYTHONUTF8": "1",
+        "PEXELS_API_KEY": "your-pexels-key-here",
+        "PIXABAY_API_KEY": "your-pixabay-key-here"
+      }
+    }
+  }
+}

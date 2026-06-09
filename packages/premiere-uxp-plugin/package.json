@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "esbuild src/main.ts --bundle --format=cjs --target=es2020 --external:uxp --external:premierepro --alias:@ppmcp/protocol=./../protocol/src/index.ts --outfile=dist/main.js",
-    "watch": "esbuild src/main.ts --bundle --format=cjs --target=es2020 --external:uxp --external:premierepro --alias:@ppmcp/protocol=./../protocol/src/index.ts --outfile=dist/main.js --watch",
+    "build": "esbuild src/main.ts --bundle --format=cjs --target=es2020 --external:uxp --external:premierepro --alias:@ppmcp/protocol=./../premiere-protocol/src/index.ts --outfile=dist/main.js",
+    "watch": "esbuild src/main.ts --bundle --format=cjs --target=es2020 --external:uxp --external:premierepro --alias:@ppmcp/protocol=./../premiere-protocol/src/index.ts --outfile=dist/main.js --watch",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
